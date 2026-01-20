@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="TravelRebel Agent Dashboard - Manage bookings, track earnings, and redeem rewards with ease.">
+    <title>TravelRebel - Agent Dashboard</title>
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/869/869149.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary-pink: #FF007F;
+            --primary-blue: #00B0FF;
+            --primary-orange: #FF5F00;
+            --neutral-black: #1A1A1A;
+            --neutral-white: #FFFFFF;
+            --neutral-silver: #C0C0C0;
+            --neutral-gray: #F7FAFC;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, var(--primary-pink), var(--primary-orange), var(--primary-blue));
+            color: var(--neutral-black);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+            transition: background 0.5s ease, color 0.5s ease;
+        }
+        body.dark {
+            background: linear-gradient(135deg, #1a202c, #4a5568);
+            color: var(--neutral-white);
+        }
+        .header {
+            background: linear-gradient(to right, var(--primary-blue), var(--primary-orange));
+            color: var(--neutral-white);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 30;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 900;
+            font-size: 1.8rem;
+            letter-spacing: 1px;
+        }
+        .search-bar {
+            width: 300px;
+            position: relative;
+        }
+        .search-bar input {
+            width: 100%;
+            padding: 0.75rem 2.5rem 0.75rem 1rem;
+            border-radius: 25px;
+            border: none;
+            background: rgba(255, 255, 255, 0.2);
+            color: var(--neutral-white);
+            font-size: 14px;
+        }
+        .search-bar input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        .search-bar .fas {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--neutral-white);
+        }
+        .dropdown {
+            position: relative;
+        }
+        .dropdown-toggle {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 25px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: background 0.3s ease;
+        }
+        .dropdown-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: var(--neutral-white);
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            width: 200px;
+            display: none;
+            z-index: 40;
+        }
+        body.dark .dropdown-menu {
+            background: #2d3748;
+        }
+        .dropdown-menu a {
+            display: block;
+            padding: 12px 20px;
+            color: var(--neutral-black);
+            text-decoration: none;
+            transition: background 0.3s ease;
+        }
+        body.dark .dropdown-menu a {
+            color: var(--neutral-white);
+        }
+        .dropdown-menu a:hover {
+            background: var(--neutral-gray);
+        }
+        body.dark .dropdown-menu a:hover {
+            background: #4b5563;
+        }
+        .dashboard-section {
+            padding: 3rem 2rem;
+            background: var(--neutral-white);
+            margin: 1.5rem auto;
+            max-width: 1400px;
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+        .dashboard-section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .dashboard-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('https://www.transparenttextures.com/patterns/subtle-stripes.png');
+            opacity: 0.05;
+            z-index: 0;
+        }
+        body.dark .dashboard-section {
+            background: #2d3748;
+        }
+        .section-title {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 900;
+            font-size: 2rem;
+            color: var(--primary-blue);
+            margin-bottom: 1.5rem;
+            border-bottom: 3px solid var(--neutral-silver);
+            padding-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            position: relative;
+            z-index: 1;
+        }
+        body.dark .section-title {
+            color: var(--primary-orange);
+            border-bottom: 3px solid #4b5563;
+        }
+        .stats-card {
+            background: var(--neutral-gray);
+            padding: 1.5rem;
+            border-radius: 15px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            text-align: center;
+        }
+        body.dark .stats-card {
+            background: #4b5563;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+        }
+        .stats-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+        }
+        .booking-card, .deal-card {
+            background: var(--neutral-gray);
+            padding: 1.5rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        body.dark .booking-card, body.dark .deal-card {
+            background: #4b5563;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        .booking-card:hover, .deal-card:hover {
+            transform: scale(1.02);
+        }
+        .booking-card img, .deal-card img {
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+        .deal-card {
+            flex-direction: column;
+            align-items: flex-start;
+            border: 1px solid var(--neutral-silver);
+            gap: 0.75rem;
+        }
+        body.dark .deal-card {
+            border: 1px solid #4b5563;
+        }
+        .deal-content {
+            flex: 1;
+        }
+        .provider-logo {
+            height: 30px;
+            margin-right: 0.5rem;
+        }
+        .cta-button {
+            padding: 10px 20px;
+            background: linear-gradient(90deg, var(--primary-pink), var(--primary-blue));
+            border-radius: 50px;
+            color: var(--neutral-white);
+            border: none;
+            cursor: pointer;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            font-size: 14px;
+            transition: transform 0.3s ease, background 0.4s ease;
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+            text-align: center;
+        }
+        .cta-button:hover {
+            background: linear-gradient(90deg, var(--primary-orange), var(--primary-pink));
+            transform: scale(1.05);
+        }
+        .cta-button:hover::after {
+            content: '🎉';
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            font-size: 20px;
+            animation: confetti 1s infinite;
+        }
+        @keyframes confetti {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(50px) rotate(360deg); opacity: 0; }
+        }
+        .points-bar {
+            width: 100%;
+            height: 20px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+        .points-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-blue), var(--primary-pink));
+            width: 0;
+            transition: width 1.5s ease-in-out;
+        }
+        .points-tooltip {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--primary-blue);
+            color: var(--neutral-white);
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        body.dark .points-tooltip {
+            background: var(--primary-orange);
+        }
+        .points-bar:hover .points-tooltip {
+            opacity: 1;
+        }
+        .notification-panel {
+            background: var(--neutral-gray);
+            padding: 1rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            position: fixed;
+            top: 5rem;
+            right: 2rem;
+            width: 300px;
+            z-index: 20;
+        }
+        body.dark .notification-panel {
+            background: #4b5563;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        .footer {
+            background: linear-gradient(to right, var(--primary-blue), var(--primary-orange));
+            color: var(--neutral-white);
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+        }
+        .footer a {
+            color: var(--neutral-white);
+            text-decoration: underline;
+            transition: color 0.3s ease;
+        }
+        .footer a:hover {
+            color: var(--primary-pink);
+        }
+        .dark-mode-toggle {
+            transition: transform 0.3s ease;
+        }
+        .dark-mode-toggle:hover {
+            transform: rotate(20deg);
+        }
+        @media (max-width: 1024px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .booking-grid, .deal-grid {
+                grid-template-columns: 1fr;
+            }
+            .notification-panel {
+                top: 5rem;
+                width: 250px;
+            }
+            .search-bar {
+                width: 200px;
+            }
+        }
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            .section-title {
+                font-size: 1.75rem;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            .notification-panel {
+                top: 4.5rem;
+                width: 200px;
+            }
+            .search-bar {
+                width: 150px;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Header -->
+    <header class="header">
+        <h1>TravelRebel Dashboard</h1>
+        <div class="flex items-center gap-4">
+            <div class="search-bar">
+                <input type="text" placeholder="Search bookings or deals..." aria-label="Search bookings or deals">
+                <i class="fas fa-search"></i>
+            </div>
+            <div class="dropdown">
+                <div class="dropdown-toggle" onclick="toggleDropdown()" aria-label="Open menu">
+                    <i class="fas fa-bars"></i> Menu
+                </div>
+                <div class="dropdown-menu" id="dropdownMenu">
+                    <a href="#" aria-label="Dashboard">Dashboard</a>
+                    <a href="#" aria-label="Bookings">Bookings</a>
+                    <a href="#" aria-label="Rewards">Rewards</a>
+                    <a href="#" aria-label="Deals">Deals</a>
+                    <a href="#" aria-label="Profile">Profile</a>
+                </div>
+            </div>
+            <button class="dark-mode-toggle text-2xl" onclick="toggleDarkMode()" aria-label="Toggle dark mode">🌙</button>
+            <a href="index.html" class="cta-button" aria-label="Log out">Log Out</a>
+        </div>
+    </header>
+
+    <!-- Notification Panel -->
+    <div class="notification-panel">
+        <h3 class="font-semibold text-lg mb-2">Notifications</h3>
+        <ul class="text-sm space-y-2">
+            <li>New deal available from TUI! <span class="text-blue-600">View Now</span></li>
+            <li>Your points are ready to redeem. <span class="text-blue-600">Check Rewards</span></li>
+            <li>Monthly subscription due on May 31, 2025. <span class="text-blue-600">Pay Now</span></li>
+        </ul>
+    </div>
+
+    <!-- Dashboard Overview -->
+    <section class="dashboard-section">
+        <h2 class="section-title"><i class="fas fa-tachometer-alt text-blue-500"></i> Dashboard Overview</h2>
+        <div class="stats-grid grid grid-cols-3 gap-6">
+            <div class="stats-card">
+                <h3 class="text-xl font-semibold text-primary-pink">Total Bookings</h3>
+                <p class="text-2xl font-bold mt-2">12</p>
+            </div>
+            <div class="stats-card">
+                <h3 class="text-xl font-semibold text-primary-pink">Total Earnings</h3>
+                <p class="text-2xl font-bold mt-2">£1,200</p>
+            </div>
+            <div class="stats-card">
+                <h3 class="text-xl font-semibold text-primary-pink">Rebel Points</h3>
+                <p class="text-2xl font-bold mt-2">750</p>
+                <a href="#rewards" class="text-blue-600 hover:underline mt-2 inline-block">Redeem</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Bookings Section -->
+    <section class="dashboard-section" id="bookings">
+        <h2 class="section-title"><i class="fas fa-clipboard-list text-blue-500"></i> Recent Bookings</h2>
+        <div class="booking-grid grid grid-cols-2 gap-6">
+            <div class="booking-card">
+                <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" alt="Spain Holiday">
+                <div>
+                    <h3 class="text-lg font-semibold">
+                        <img src="https://cdn.freebiesupply.com/logos/thumbs/2x/tui-logo.png" alt="TUI Logo" class="provider-logo inline-block">
+                        Spain Holiday
+                    </h3>
+                    <p class="mt-2">Value: £2,400 | Commission: £240 | Date: May 10, 2025</p>
+                    <a href="#" class="text-blue-600 hover:underline mt-2 inline-block">View Details</a>
+                </div>
+            </div>
+            <div class="booking-card">
+                <img src="https://images.unsplash.com/photo-1506929562872-bb421503ef21?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" alt="London to NY Flight">
+                <div>
+                    <h3 class="text-lg font-semibold">
+                        <img src="https://cdn.freebiesupply.com/logos/large/2x/british-airways-01-logo-png-transparent.png" alt="British Airways Logo" class="provider-logo inline-block">
+                        London to NY
+                    </h3>
+                    <p class="mt-2">Value: £1,800 | Commission: £180 | Date: May 12, 2025</p>
+                    <a href="#" class="text-blue-600 hover:underline mt-2 inline-block">View Details</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Earnings & Rewards Section -->
+    <section class="dashboard-section" id="rewards">
+        <h2 class="section-title"><i class="fas fa-money-bill-wave text-green-500"></i> Earnings & Rewards</h2>
+        <div class="grid grid-cols-2 gap-6">
+     <div class="stats-card">
+    <h3 class="text-xl font-semibold text-primary-pink">Rewards Points</h3>
+    <p class="text-2xl font-bold mt-2">750 / 1,000</p>
+    <div class="points-bar mt-2">
+        <div class="points-fill" style="width: 75%"></div>
+        <div class="points-tooltip">750 points earned (240 from bookings, 510 from bonuses)</div>
+    </div>
+    <p class="mt-2 text-sm">Redeem 500 points for £25 voucher</p>
+    <a href="#" class="cta-button mt-2" aria-label="Redeem rewards">Redeem Now</a>
+</div>
+/div>
+    </section>
+
+    <!-- Top Deals Section -->
+    <section class="dashboard-section" id="deals">
+        <h2 class="section-title"><i class="fas fa-gift text-yellow-500"></i> Top Deals</h2>
+        <div class="deal-grid grid grid-cols-3 gap-6">
+            <div class="deal-card">
+                <img src="https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" alt="Mediterranean Cruise">
+                <div class="deal-content">
+                    <h3 class="text-lg font-semibold">
+                        <img src="https://cdn.freebiesupply.com/logos/thumbs/2x/tui-logo.png" alt="TUI Logo" class="provider-logo inline-block">
+                        Mediterranean Cruise
+                    </h3>
+                    <p class="mt-2">Save 15% | £1,999 | Ends May 25, 2025</p>
+                </div>
+                <a href="#" class="cta-button" aria-label="Book TUI deal">Book Now</a>
+            </div>
+            <div class="deal-card">
+    <img src="https://images.unsplash.com/photo-1556388158-158ea5ccacbd?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" alt="Business Class Flight">
+    <div class="deal-content">
+        <h3 class="text-lg font-semibold">
+            <img src="https://cdn.freebiesupply.com/logos/large/2x/british-airways-01-logo-png-transparent.png" alt="British Airways Logo" class="provider-logo inline-block">
+            Business Class
+        </h3>
+        <p class="mt-2">20% Off | £2,500 | Ends May 28, 2025</p>
+    </div>
+    <a href="#" class="cta-button" aria-label="Book British Airways deal">Book Now</a>
+</div>
+            <div class="deal-card">
+                <img src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" alt="All-Inclusive Resort">
+                <div class="deal-content">
+                    <h3 class="text-lg font-semibold">
+                        <img src="https://cdn.freebiesupply.com/logos/thumbs/2x/expedia-logo.png" alt="Expedia Logo" class="provider-logo inline-block">
+                        All-Inclusive Resort
+                    </h3>
+                    <p class="mt-2">10% Discount | £3,000 | Ends May 30, 2025</p>
+                </div>
+                <a href="#" class="cta-button" aria-label="Book Expedia deal">Book Now</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>© 2025 TravelRebel. All rights reserved.</p>
+        <p class="mt-2">Contact us: <a href="mailto:support@travelrebel.com">support@travelrebel.com</a> | +44 123 456 7890</p>
+    </footer>
+
+    <script>
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark');
+            const toggle = document.querySelector('.dark-mode-toggle');
+            toggle.textContent = document.body.classList.contains('dark') ? '☀️' : '🌙';
+            toggle.setAttribute('aria-label', document.body.classList.contains('dark') ? 'Switch to light mode' : 'Switch to dark mode');
+        }
+
+        function toggleDropdown() {
+            const dropdownMenu = document.getElementById('dropdownMenu');
+            dropdownMenu.style.display = dropdownMenu.style.display === 'block' ? 'none' : 'block';
+        }
+
+        document.addEventListener('click', function(event) {
+            const dropdown = document.querySelector('.dropdown');
+            if (!dropdown.contains(event.target)) {
+                document.getElementById('dropdownMenu').style.display = 'none';
+            }
+        });
+
+        function handleScroll() {
+            const sections = document.querySelectorAll('.dashboard-section');
+            const triggerPoint = window.innerHeight * 0.8;
+
+            sections.forEach(section => {
+                const sectionTop = section.getBoundingClientRect().top;
+                if (sectionTop < triggerPoint) {
+                    section.classList.add('visible');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', handleScroll);
+        window.addEventListener('load', handleScroll);
+    </script>
+</body>
+</html>
