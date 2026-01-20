@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Partner with TravelRebel to access exclusive travel deals, earn rewards, and grow your agency with top providers like TUI and British Airways.">
+    <title>TravelRebel - Partner with Us</title>
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/869/869149.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary-pink: #FF007F;
+            --primary-blue: #00B0FF;
+            --primary-orange: #FF5F00;
+            --neutral-black: #1A1A1A;
+            --neutral-white: #FFFFFF;
+            --neutral-silver: #C0C0C0;
+            --neutral-gray: #F7FAFC;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, var(--primary-pink), var(--primary-orange), var(--primary-blue));
+            color: var(--neutral-black);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+            transition: background 0.5s ease, color 0.5s ease;
+        }
+        body.dark {
+            background: linear-gradient(135deg, #1a202c, #4a5568);
+            color: var(--neutral-white);
+        }
+        .header {
+            background: linear-gradient(to right, var(--primary-blue), var(--primary-orange));
+            color: var(--neutral-white);
+            padding: 1.5rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 900;
+            font-size: 1.75rem;
+            letter-spacing: 1px;
+        }
+        .hero {
+            background: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80') no-repeat center center/cover;
+            height: 600px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: var(--neutral-white);
+            padding: 2rem;
+        }
+        .hero-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.2));
+        }
+        .hero-content h1 {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 900;
+            font-size: 3rem;
+            letter-spacing: 2px;
+            text-shadow: 0 3px 6px rgba(0, 0, 0, 0.5);
+            line-height: 1.2;
+        }
+        .hero-content p {
+            font-size: 1.25rem;
+            margin: 1rem 0;
+            font-weight: 300;
+            max-width: 600px;
+        }
+        .hero-content .benefits {
+            font-size: 1rem;
+            margin: 1rem auto;
+            max-width: 500px;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        .cta-button {
+            padding: 14px 28px;
+            background: linear-gradient(90deg, var(--primary-pink), var(--primary-blue));
+            border-radius: 50px;
+            color: var(--neutral-white);
+            border: none;
+            cursor: pointer;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            font-size: 16px;
+            transition: transform 0.3s ease, background 0.4s ease;
+        }
+        .cta-button:hover {
+            background: linear-gradient(90deg, var(--primary-orange), var(--primary-pink));
+            transform: scale(1.05);
+        }
+        .section {
+            padding: 4rem 2rem;
+            background: var(--neutral-white);
+            margin: 2rem auto;
+            max-width: 1200px;
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+        .section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('https://www.transparenttextures.com/patterns/subtle-stripes.png');
+            opacity: 0.05;
+            z-index: 0;
+        }
+        body.dark .section {
+            background: #2d3748;
+        }
+        .section-title {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 900;
+            font-size: 2.25rem;
+            color: var(--primary-blue);
+            margin-bottom: 2rem;
+            border-bottom: 3px solid var(--neutral-silver);
+            padding-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            position: relative;
+            z-index: 1;
+        }
+        body.dark .section-title {
+            color: var(--primary-orange);
+            border-bottom: 3px solid #4b5563;
+        }
+        .provider-logo {
+            height: 50px;
+            margin: 0 auto;
+            display: block;
+        }
+        .steps-grid, .fees-grid, .providers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+        .step-card, .fee-card, .provider-card, .testimonial-card {
+            background: var(--neutral-gray);
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        body.dark .step-card, body.dark .fee-card, body.dark .provider-card, body.dark .testimonial-card {
+            background: #4b5563;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+        }
+        .step-card:hover, .fee-card:hover, .provider-card:hover, .testimonial-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+        }
+        .step-card h3, .fee-card h3, .provider-card h3 {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            font-size: 1.4rem;
+            color: var(--primary-pink);
+            margin-bottom: 0.75rem;
+        }
+        .step-card p, .fee-card p, .provider-card p, .testimonial-card p {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: var(--neutral-black);
+        }
+        body.dark .step-card p, body.dark .fee-card p, body.dark .provider-card p, body.dark .testimonial-card p {
+            color: var(--neutral-white);
+        }
+        .points-bar {
+            width: 100%;
+            height: 25px;
+            background: #e2e8f0;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 1.5rem 0;
+        }
+        .points-fill {
+            height: 100%;
+            background: var(--primary-blue);
+            width: 50%;
+            transition: width 0.5s ease;
+        }
+        .footer {
+            background: linear-gradient(to right, var(--primary-blue), var(--primary-orange));
+            color: var(--neutral-white);
+            padding: 3rem 2rem;
+            text-align: center;
+            position: relative;
+        }
+        .footer a {
+            color: var(--neutral-white);
+            text-decoration: underline;
+            transition: color 0.3s ease;
+        }
+        .footer a:hover {
+            color: var(--primary-pink);
+        }
+        .sticky-cta {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 30;
+        }
+        .dark-mode-toggle {
+            transition: transform 0.3s ease;
+        }
+        .dark-mode-toggle:hover {
+            transform: rotate(20deg);
+        }
+        @media (max-width: 768px) {
+            .hero {
+                height: 450px;
+            }
+            .hero-content h1 {
+                font-size: 2rem;
+            }
+            .hero-content p {
+                font-size: 1rem;
+            }
+            .hero-content .benefits {
+                font-size: 0.9rem;
+            }
+            .section-title {
+                font-size: 1.75rem;
+            }
+            .cta-button {
+                padding: 12px 24px;
+                font-size: 14px;
+            }
+        }
+        @media (max-width: 480px) {
+            .hero {
+                height: 400px;
+            }
+            .hero-content h1 {
+                font-size: 1.5rem;
+            }
+            .hero-content p {
+                font-size: 0.9rem;
+            }
+            .section {
+                padding: 2rem 1rem;
+                margin: 1rem;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Header -->
+    <header class="header">
+        <h1>TravelRebel</h1>
+        <div class="flex items-center gap-4">
+            <button class="dark-mode-toggle text-2xl" onclick="toggleDarkMode()" aria-label="Toggle dark mode">🌙</button>
+            <a href="#contact" class="cta-button" aria-label="Get started with TravelRebel">Get Started</a>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-overlay"></div>
+        <div class="hero-content relative z-10">
+            <h1>Partner with TravelRebel</h1>
+            <p>Unlock Exclusive Travel Deals and Rewards for Your Agency</p>
+            <p class="benefits">✓ Competitive Commissions  ✓ Bonus Points  ✓ Top Providers</p>
+            <a href="#contact" class="cta-button mt-4" aria-label="Join TravelRebel now">Join Now</a>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="section" id="how-it-works">
+        <h2 class="section-title"><i class="fas fa-briefcase text-blue-500"></i> How It Works</h2>
+        <div class="steps-grid">
+            <div class="step-card">
+                <h3>Step 1: Sign Up</h3>
+                <p>Join TravelRebel in minutes and access our intuitive partner portal.</p>
+            </div>
+            <div class="step-card">
+                <h3>Step 2: Access Deals</h3>
+                <p>Explore curated travel packages from leading providers like TUI and British Airways.</p>
+            </div>
+            <div class="step-card">
+                <h3>Step 3: Earn Rewards</h3>
+                <p>Accumulate Rebel Points with every booking, redeemable for cash or discounts.</p>
+            </div>
+            <div class="step-card">
+                <h3>Step 4: Grow Your Business</h3>
+                <p>Use our tools and support to offer unbeatable packages and expand your clientele.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Bonus Points System Section -->
+    <section class="section" id="bonus-points">
+        <h2 class="section-title"><i class="fas fa-star text-yellow-500"></i> Bonus Points System</h2>
+        <p class="text-lg">Earn <strong>Rebel Points</strong> with every booking and unlock exclusive rewards for your agency!</p>
+        <div class="mt-6">
+            <p><strong>How to Earn:</strong></p>
+            <ul class="list-disc pl-6 mt-2">
+                <li>10 points per £100 booked (e.g., a £2,400 package earns 240 points).</li>
+                <li>Bonus 50 points for every 5 bookings in a month.</li>
+                <li>Double points during special promotional campaigns.</li>
+            </ul>
+        </div>
+        <div class="mt-4">
+            <p><strong>Redeem Points:</strong></p>
+            <ul class="list-disc pl-6 mt-2">
+                <li>500 points = £25 cash voucher.</li>
+                <li>1,000 points = £50 cash voucher.</li>
+                <li>Points can be applied as discounts on future bookings.</li>
+            </ul>
+        </div>
+        <div class="mt-4">
+            <p><strong>Example Progress (500/1,000 Points to Next Reward):</strong></p>
+            <div class="points-bar">
+                <div class="points-fill"></div>
+            </div>
+        </div>
+        <a href="#contact" class="text-blue-600 hover:underline mt-4 inline-block">Learn More About Rewards</a>
+    </section>
+
+    <!-- Fees Structure Section -->
+    <section class="section" id="fees">
+        <h2 class="section-title"><i class="fas fa-money-bill-wave text-green-500"></i> Fees & Commissions</h2>
+        <div class="fees-grid">
+            <div class="fee-card">
+                <h3>Agent Commission</h3>
+                <p>Earn a competitive 10% commission on every booking (e.g., £240 on a £2,400 package).</p>
+            </div>
+            <div class="fee-card">
+                <h3>Platform Fee</h3>
+                <p>A transparent 5% fee per booking supports our platform and services.</p>
+            </div>
+            <div class="fee-card">
+                <h3>No Hidden Costs</h3>
+                <p>No signup fees, no monthly subscriptions—just a simple per-booking fee.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Top Providers Section -->
+    <section class="section" id="providers">
+        <h2 class="section-title"><i class="fas fa-plane text-blue-500"></i> Our Top Providers</h2>
+        <div class="providers-grid">
+            <div class="provider-card text-center">
+                <img src="https://cdn.freebiesupply.com/logos/thumbs/2x/tui-logo.png" alt="TUI Logo" class="provider-logo" loading="lazy">
+                <h3>TUI</h3>
+                <p>Exclusive packages and competitive pricing for European destinations.</p>
+            </div>
+            <div class="provider-card text-center">
+                <img src="https://cdn.freebiesupply.com/logos/large/2x/british-airways-01-logo-png-transparent.png" alt="British Airways Logo" class="provider-logo" loading="lazy">
+                <h3>British Airways</h3>
+                <p>Reliable flights with premium services and extra legroom options.</p>
+            </div>
+            <div class="provider-card text-center">
+                <img src="https://cdn.freebiesupply.com/logos/thumbs/2x/expedia-logo.png" alt="Expedia Logo" class="provider-logo" loading="lazy">
+                <h3>Expedia</h3>
+                <p>Wide range of hotels and bundled travel options for your clients.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="section" id="testimonials">
+        <h2 class="section-title"><i class="fas fa-quote-left text-pink-500"></i> What Our Partners Say</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="testimonial-card">
+                <p>"TravelRebel has revolutionized my agency! The rewards program is fantastic, and their support team is top-notch."</p>
+                <p class="mt-3 font-semibold">— Sarah Thompson, Travel Agent</p>
+            </div>
+            <div class="testimonial-card">
+                <p>"I appreciate the transparency in fees and the ease of booking with top providers. My clients are thrilled!"</p>
+                <p class="mt-3 font-semibold">— Mark Evans, Independent Agent</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Call to Action Section -->
+    <section class="section text-center" id="contact">
+        <h2 class="section-title">Ready to Partner with TravelRebel?</h2>
+        <p class="text-lg mb-6 max-w-2xl mx-auto">Join us today to offer your clients the best travel experiences while earning competitive commissions and rewards!</p>
+        <a href="#contact" class="cta-button" aria-label="Get started with TravelRebel">Get Started Now</a>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>© 2025 TravelRebel. All rights reserved.</p>
+        <p class="mt-2">Contact us: <a href="mailto:partners@travelrebel.com">partners@travelrebel.com</a> | +44 123 456 7890</p>
+        <a href="#contact" class="cta-button sticky-cta" aria-label="Join TravelRebel now">Join Now</a>
+    </footer>
+
+    <script>
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark');
+            const toggle = document.querySelector('.dark-mode-toggle');
+            toggle.textContent = document.body.classList.contains('dark') ? '☀️' : '🌙';
+            toggle.setAttribute('aria-label', document.body.classList.contains('dark') ? 'Switch to light mode' : 'Switch to dark mode');
+        }
+
+        // Fade-in animation for sections on scroll
+        function handleScroll() {
+            const sections = document.querySelectorAll('.section');
+            const triggerPoint = window.innerHeight * 0.8;
+
+            sections.forEach(section => {
+                const sectionTop = section.getBoundingClientRect().top;
+                if (sectionTop < triggerPoint) {
+                    section.classList.add('visible');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', handleScroll);
+        window.addEventListener('load', handleScroll);
+    </script>
+</body>
+</html>

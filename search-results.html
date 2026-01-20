@@ -1,0 +1,679 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="TravelRebel Search Results - Find the best holiday deals in Mallorca for 2 adults.">
+    <title>TravelRebel - Search Results</title>
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/869/869149.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary-pink: #FF007F;
+            --primary-blue: #00B0FF;
+            --primary-orange: #FF5F00;
+            --neutral-black: #1A1A1A;
+            --neutral-white: #FFFFFF;
+            --neutral-silver: #C0C0C0;
+            --neutral-gray: #F7FAFC;
+            --gold: #FFD700;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, var(--primary-pink), var(--primary-orange), var(--primary-blue));
+            color: var(--neutral-black);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+            transition: background 0.5s ease, color 0.5s ease;
+        }
+        body.dark {
+            background: linear-gradient(135deg, #1a202c, #4a5568);
+            color: var(--neutral-white);
+        }
+        .header {
+            background: linear-gradient(to right, var(--primary-blue), var(--primary-orange));
+            color: var(--neutral-white);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 30;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 900;
+            font-size: 1.8rem;
+            letter-spacing: 1px;
+        }
+        .hero {
+            background: url('https://images.unsplash.com/photo-1624453432558-92a71fc412eb?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80') no-repeat center center/cover;
+            height: 300px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: var(--neutral-white);
+            padding: 2rem;
+        }
+        .hero-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.3));
+        }
+        .hero-content h1 {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 900;
+            font-size: 2.5rem;
+            letter-spacing: 2px;
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.6);
+            animation: fadeInUp 1s ease-out;
+        }
+        .hero-content p {
+            font-size: 1.2rem;
+            margin: 0.5rem 0;
+            font-weight: 300;
+            animation: fadeInUp 1s ease-out 0.3s;
+            animation-fill-mode: both;
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .filter-bar {
+            background: var(--neutral-white);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 70px;
+            z-index: 20;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: center;
+        }
+        body.dark .filter-bar {
+            background: #2d3748;
+        }
+        .filter-bar select, .filter-bar .filter-button {
+            padding: 0.5rem 1rem;
+            background: var(--neutral-gray);
+            border-radius: 25px;
+            border: 1px solid var(--neutral-silver);
+            cursor: pointer;
+            transition: background 0.3s ease, border-color 0.3s ease;
+        }
+        body.dark .filter-bar select, body.dark .filter-bar .filter-button {
+            background: #4b5563;
+            border: 1px solid #4b5563;
+        }
+        .filter-bar select:hover, .filter-bar .filter-button:hover, .filter-bar .filter-button.active {
+            background: var(--primary-blue);
+            color: var(--neutral-white);
+            border-color: var(--primary-blue);
+        }
+        body.dark .filter-bar select:hover, body.dark .filter-bar .filter-button:hover, body.dark .filter-bar .filter-button.active {
+            background: var(--primary-orange);
+            border-color: var(--primary-orange);
+        }
+        .filter-summary {
+            background: var(--gold);
+            color: var(--neutral-black);
+            padding: 0.25rem 0.75rem;
+            border-radius: 25px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .clear-filters {
+            padding: 0.5rem 1rem;
+            background: var(--neutral-silver);
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        .clear-filters:hover {
+            background: var(--primary-pink);
+            color: var(--neutral-white);
+        }
+        .results-section {
+            padding: 2rem;
+            background: var(--neutral-white);
+            margin: 1.5rem auto;
+            max-width: 1400px;
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+            position: relative;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+        .results-section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        body.dark .results-section {
+            background: #2d3748;
+        }
+        .deal-list {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+        .deal-card {
+            background: var(--neutral-gray);
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            display: flex;
+            align-items: flex-start;
+            gap: 1.5rem;
+            max-width: 100%;
+        }
+        body.dark .deal-card {
+            background: #4b5563;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+        }
+        .deal-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15), 0 0 15px var(--gold);
+        }
+        .deal-card img {
+            width: 300px;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 10px;
+            background: #e2e8f0; /* Fallback color if image fails to load */
+            flex-shrink: 0;
+        }
+        .deal-card .details {
+            flex: 1;
+        }
+        .deal-card h3 {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--primary-pink);
+            margin: 0.75rem 0 0.25rem;
+        }
+        .star-rating {
+            color: var(--gold);
+            margin-bottom: 0.5rem;
+        }
+        .deal-card p {
+            margin: 0.25rem 0;
+            font-size: 0.95rem;
+        }
+        .deal-card .price {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--primary-blue);
+            margin: 0.5rem 0;
+        }
+        body.dark .deal-card .price {
+            color: var(--primary-orange);
+        }
+        .cta-button {
+            padding: 12px 24px;
+            background: linear-gradient(90deg, var(--primary-pink), var(--primary-blue));
+            border-radius: 50px;
+            color: var(--neutral-white);
+            border: none;
+            cursor: pointer;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            font-size: 16px;
+            transition: transform 0.3s ease, background 0.4s ease;
+            position: relative;
+            overflow: hidden;
+            width: fit-content;
+            text-align: center;
+            display: inline-block;
+        }
+        .cta-button:hover {
+            background: linear-gradient(90deg, var(--primary-orange), var(--primary-pink));
+            transform: scale(1.05);
+        }
+        .cta-button:hover::after {
+            content: '🎉';
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            font-size: 24px;
+            animation: confetti 1s infinite;
+        }
+        @keyframes confetti {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(50px) rotate(360deg); opacity: 0; }
+        }
+        .favorite-button {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--neutral-silver);
+        }
+        body.dark .favorite-button {
+            color: #4b5563;
+        }
+        .favorite-button.active {
+            color: var(--primary-pink);
+        }
+        .compare-checkbox {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            accent-color: var(--primary-blue);
+        }
+        body.dark .compare-checkbox {
+            accent-color: var(--primary-orange);
+        }
+        .compare-bar {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--neutral-white);
+            padding: 1rem;
+            border-radius: 25px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            display: none;
+            z-index: 40;
+        }
+        body.dark .compare-bar {
+            background: #2d3748;
+        }
+        .compare-bar button {
+            padding: 0.5rem 1rem;
+            background: linear-gradient(90deg, var(--primary-pink), var(--primary-blue));
+            border-radius: 25px;
+            color: var(--neutral-white);
+            border: none;
+            cursor: pointer;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+        }
+        .compare-bar button:hover {
+            background: linear-gradient(90deg, var(--primary-orange), var(--primary-pink));
+        }
+        .compare-bar span {
+            margin-right: 1rem;
+            font-weight: 600;
+        }
+        .footer {
+            background: linear-gradient(to right, var(--primary-blue), var(--primary-orange));
+            color: var(--neutral-white);
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+        }
+        .footer a {
+            color: var(--neutral-white);
+            text-decoration: underline;
+            transition: color 0.3s ease;
+        }
+        .footer a:hover {
+            color: var(--primary-pink);
+        }
+        .dark-mode-toggle {
+            transition: transform 0.3s ease;
+        }
+        .dark-mode-toggle:hover {
+            transform: rotate(20deg);
+        }
+        @media (max-width: 1024px) {
+            .deal-card {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+            .deal-card img {
+                width: 100%;
+                height: auto;
+            }
+        }
+        @media (max-width: 768px) {
+            .hero {
+                height: 250px;
+            }
+            .hero-content h1 {
+                font-size: 1.75rem;
+            }
+            .hero-content p {
+                font-size: 1rem;
+            }
+            .filter-bar {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+            .filter-bar select, .filter-bar .filter-button {
+                width: 100%;
+            }
+            .deal-card {
+                padding: 1.5rem;
+            }
+            .compare-bar {
+                width: 90%;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Header -->
+    <header class="header">
+        <h1>TravelRebel Search Results</h1>
+        <div class="flex items-center gap-4">
+            <button class="dark-mode-toggle text-2xl" onclick="toggleDarkMode()" aria-label="Toggle dark mode">🌙</button>
+            <a href="bookings.html" class="cta-button" aria-label="Back to bookings">Back to Bookings</a>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-overlay"></div>
+        <div class="hero-content relative z-10">
+            <h1>Holidays in Mallorca</h1>
+            <p>2 Adults, 0 Children | May 20 - May 27, 2025</p>
+        </div>
+    </section>
+
+    <!-- Filter Bar -->
+    <div class="filter-bar">
+        <select id="sort" onchange="sortDeals()" aria-label="Sort by">
+            <option value="price-low">Price: Low to High</option>
+            <option value="price-high">Price: High to Low</option>
+            <option value="stars-high">Star Rating: High to Low</option>
+        </select>
+        <div class="filter-button" onclick="toggleFilter(this)">3 Stars</div>
+        <div class="filter-button" onclick="toggleFilter(this)">4 Stars</div>
+        <div class="filter-button" onclick="toggleFilter(this)">5 Stars</div>
+        <select aria-label="Board basis">
+            <option>Board Basis</option>
+            <option>All Inclusive</option>
+            <option>Half Board</option>
+            <option>Bed & Breakfast</option>
+        </select>
+        <div class="clear-filters" onclick="clearFilters()">Clear Filters</div>
+        <div class="filter-summary" id="filterSummary">0 filters applied</div>
+    </div>
+
+    <!-- Results Section -->
+    <section class="results-section">
+        <div class="deal-list" id="dealList">
+            <div class="deal-card" data-price="1200" data-stars="5">
+                <input type="checkbox" class="compare-checkbox" onchange="toggleCompare(this)" aria-label="Compare this deal">
+                <button class="favorite-button" onclick="toggleFavorite(this)" aria-label="Add to favorites"><i class="far fa-heart"></i></button>
+                <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=200&q=80" alt="Hotel Playa de Palma">
+                <div class="details">
+                    <h3>Hotel Playa de Palma</h3>
+                    <div class="star-rating">★★★★★</div>
+                    <p>Board Basis: All Inclusive</p>
+                    <p>Dates: May 20 - May 27, 2025</p>
+                    <p class="price">£1,200</p>
+                    <p>Located on a stunning beachfront with 5-star amenities, including a spa and infinity pool. Just 50m from the sea.</p>
+                    <p>Amenities: Spa, Pool, Restaurant</p>
+                    <a href="#" class="cta-button" aria-label="Book Hotel Playa de Palma">Book Now</a>
+                </div>
+            </div>
+            <div class="deal-card" data-price="950" data-stars="4">
+                <input type="checkbox" class="compare-checkbox" onchange="toggleCompare(this)" aria-label="Compare this deal">
+                <button class="favorite-button" onclick="toggleFavorite(this)" aria-label="Add to favorites"><i class="far fa-heart"></i></button>
+                <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=200&q=80" alt="Hotel Cala Millor">
+                <div class="details">
+                    <h3>Hotel Cala Millor</h3>
+                    <div class="star-rating">★★★★</div>
+                    <p>Board Basis: Half Board</p>
+                    <p>Dates: May 20 - May 27, 2025</p>
+                    <p class="price">£950</p>
+                    <p>A charming 4-star hotel nestled in a quiet bay, perfect for relaxation. 100m from the beach.</p>
+                    <p>Amenities: Pool, Bar, Garden</p>
+                    <a href="#" class="cta-button" aria-label="Book Hotel Cala Millor">Book Now</a>
+                </div>
+            </div>
+            <div class="deal-card" data-price="1400" data-stars="5">
+                <input type="checkbox" class="compare-checkbox" onchange="toggleCompare(this)" aria-label="Compare this deal">
+                <button class="favorite-button" onclick="toggleFavorite(this)" aria-label="Add to favorites"><i class="far fa-heart"></i></button>
+                <img src="https://images.unsplash.com/photo-1506929562872-bb421503ef21?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=200&q=80" alt="Hotel Alcudia Bay">
+                <div class="details">
+                    <h3>Hotel Alcudia Bay</h3>
+                    <div class="star-rating">★★★★★</div>
+                    <p>Board Basis: All Inclusive</p>
+                    <p>Dates: May 20 - May 27, 2025</p>
+                    <p class="price">£1,400</p>
+                    <p>Luxury 5-star resort with panoramic sea views and top-tier dining. 30m from the shore.</p>
+                    <p>Amenities: Spa, Pool, Gym</p>
+                    <a href="#" class="cta-button" aria-label="Book Hotel Alcudia Bay">Book Now</a>
+                </div>
+            </div>
+            <div class="deal-card" data-price="800" data-stars="3">
+                <input type="checkbox" class="compare-checkbox" onchange="toggleCompare(this)" aria-label="Compare this deal">
+                <button class="favorite-button" onclick="toggleFavorite(this)" aria-label="Add to favorites"><i class="far fa-heart"></i></button>
+                <img src="https://images.unsplash.com/photo-1519681393784-d120267933ba?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=200&q=80" alt="Hotel Sa Coma">
+                <div class="details">
+                    <h3>Hotel Sa Coma</h3>
+                    <div class="star-rating">★★★</div>
+                    <p>Board Basis: Bed & Breakfast</p>
+                    <p>Dates: May 20 - May 27, 2025</p>
+                    <p class="price">£800</p>
+                    <p>A cozy 3-star hotel with a family-friendly vibe. 200m from the beach.</p>
+                    <p>Amenities: Pool, Restaurant</p>
+                    <a href="#" class="cta-button" aria-label="Book Hotel Sa Coma">Book Now</a>
+                </div>
+            </div>
+            <div class="deal-card" data-price="1100" data-stars="4">
+                <input type="checkbox" class="compare-checkbox" onchange="toggleCompare(this)" aria-label="Compare this deal">
+                <button class="favorite-button" onclick="toggleFavorite(this)" aria-label="Add to favorites"><i class="far fa-heart"></i></button>
+                <img src="https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=200&q=80" alt="Hotel Palma Nova">
+                <div class="details">
+                    <h3>Hotel Palma Nova</h3>
+                    <div class="star-rating">★★★★</div>
+                    <p>Board Basis: All Inclusive</p>
+                    <p>Dates: May 20 - May 27, 2025</p>
+                    <p class="price">£1,100</p>
+                    <p>Vibrant 4-star hotel with a lively atmosphere and beach access. 80m from the sea.</p>
+                    <p>Amenities: Pool, Bar, Entertainment</p>
+                    <a href="#" class="cta-button" aria-label="Book Hotel Palma Nova">Book Now</a>
+                </div>
+            </div>
+            <div class="deal-card" data-price="850" data-stars="3">
+                <input type="checkbox" class="compare-checkbox" onchange="toggleCompare(this)" aria-label="Compare this deal">
+                <button class="favorite-button" onclick="toggleFavorite(this)" aria-label="Add to favorites"><i class="far fa-heart"></i></button>
+                <img src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=200&q=80" alt="Hotel Magaluf">
+                <div class="details">
+                    <h3>Hotel Magaluf</h3>
+                    <div class="star-rating">★★★</div>
+                    <p>Board Basis: Bed & Breakfast</p>
+                    <p>Dates: May 20 - May 27, 2025</p>
+                    <p class="price">£850</p>
+                    <p>A budget-friendly 3-star option with a central location. 150m from the beach.</p>
+                    <p>Amenities: Pool, Wi-Fi</p>
+                    <a href="#" class="cta-button" aria-label="Book Hotel Magaluf">Book Now</a>
+                </div>
+            </div>
+            <div class="deal-card" data-price="1300" data-stars="5">
+                <input type="checkbox" class="compare-checkbox" onchange="toggleCompare(this)" aria-label="Compare this deal">
+                <button class="favorite-button" onclick="toggleFavorite(this)" aria-label="Add to favorites"><i class="far fa-heart"></i></button>
+                <img src="https://images.unsplash.com/photo-1612423288917-6c5e9f5e4c0f?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=200&q=80" alt="Hotel Port de Pollenca">
+                <div class="details">
+                    <h3>Hotel Port de Pollenca</h3>
+                    <div class="star-rating">★★★★★</div>
+                    <p>Board Basis: Half Board</p>
+                    <p>Dates: May 20 - May 27, 2025</p>
+                    <p class="price">£1,300</p>
+                    <p>A luxurious 5-star hotel with stunning views of the Pollenca Bay. 20m from the beach.</p>
+                    <p>Amenities: Spa, Pool, Fine Dining</p>
+                    <a href="#" class="cta-button" aria-label="Book Hotel Port de Pollenca">Book Now</a>
+                </div>
+            </div>
+            <div class="deal-card" data-price="1000" data-stars="4">
+                <input type="checkbox" class="compare-checkbox" onchange="toggleCompare(this)" aria-label="Compare this deal">
+                <button class="favorite-button" onclick="toggleFavorite(this)" aria-label="Add to favorites"><i class="far fa-heart"></i></button>
+                <img src="https://images.unsplash.com/photo-1612423288917-6c5e9f5e4c0f?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=200&q=80" alt="Hotel Soller Beach">
+                <div class="details">
+                    <h3>Hotel Soller Beach</h3>
+                    <div class="star-rating">★★★★</div>
+                    <p>Board Basis: All Inclusive</p>
+                    <p>Dates: May 20 - May 27, 2025</p>
+                    <p class="price">£1,000</p>
+                    <p>A stylish 4-star hotel with direct beach access and modern amenities. 10m from the shore.</p>
+                    <p>Amenities: Pool, Restaurant, Beach Access</p>
+                    <a href="#" class="cta-button" aria-label="Book Hotel Soller Beach">Book Now</a>
+                </div>
+            </div>
+        </div>
+        <div class="text-center mt-6">
+            <button class="cta-button" onclick="loadMoreDeals()" aria-label="Load more deals">Load More</button>
+        </div>
+    </section>
+
+    <!-- Compare Bar -->
+    <div class="compare-bar" id="compareBar">
+        <span id="compareCount">0 deals selected</span>
+        <button onclick="compareDeals()" aria-label="Compare selected deals">Compare</button>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>© 2025 TravelRebel. All rights reserved.</p>
+        <p class="mt-2">Contact us: <a href="mailto:support@travelrebel.com">support@travelrebel.com</a> | +44 123 456 7890</p>
+    </footer>
+
+    <script>
+        let filterCount = 0;
+        let compareCount = 0;
+
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark');
+            const toggle = document.querySelector('.dark-mode-toggle');
+            toggle.textContent = document.body.classList.contains('dark') ? '☀️' : '🌙';
+            toggle.setAttribute('aria-label', document.body.classList.contains('dark') ? 'Switch to light mode' : 'Switch to dark mode');
+        }
+
+        function handleScroll() {
+            const section = document.querySelector('.results-section');
+            const triggerPoint = window.innerHeight * 0.8;
+            const sectionTop = section.getBoundingClientRect().top;
+            if (sectionTop < triggerPoint) {
+                section.classList.add('visible');
+            }
+        }
+
+        function toggleFilter(button) {
+            button.classList.toggle('active');
+            filterCount = document.querySelectorAll('.filter-button.active').length;
+            document.getElementById('filterSummary').textContent = `${filterCount} filters applied`;
+        }
+
+        function clearFilters() {
+            document.querySelectorAll('.filter-button.active').forEach(button => button.classList.remove('active'));
+            filterCount = 0;
+            document.getElementById('filterSummary').textContent = '0 filters applied';
+        }
+
+        function sortDeals() {
+            const sortValue = document.getElementById('sort').value;
+            const dealList = document.getElementById('dealList');
+            const deals = Array.from(dealList.children);
+
+            if (sortValue === 'price-low') {
+                deals.sort((a, b) => a.dataset.price - b.dataset.price);
+            } else if (sortValue === 'price-high') {
+                deals.sort((a, b) => b.dataset.price - a.dataset.price);
+            } else if (sortValue === 'stars-high') {
+                deals.sort((a, b) => b.dataset.stars - a.dataset.stars);
+            }
+
+            deals.forEach(deal => dealList.appendChild(deal));
+        }
+
+        function toggleFavorite(button) {
+            button.classList.toggle('active');
+            const icon = button.querySelector('i');
+            icon.classList.toggle('far');
+            icon.classList.toggle('fas');
+        }
+
+        function toggleCompare(checkbox) {
+            compareCount += checkbox.checked ? 1 : -1;
+            if (compareCount > 3) {
+                checkbox.checked = false;
+                compareCount--;
+                alert('You can only compare up to 3 deals at a time.');
+                return;
+            }
+            const compareBar = document.getElementById('compareBar');
+            const compareCountDisplay = document.getElementById('compareCount');
+            compareCountDisplay.textContent = `${compareCount} deals selected`;
+            compareBar.style.display = compareCount > 0 ? 'flex' : 'none';
+        }
+
+        function compareDeals() {
+            alert('Compare feature coming soon!');
+        }
+
+        function loadMoreDeals() {
+            alert('Load more deals feature coming soon!');
+        }
+
+        window.addEventListener('scroll', handleScroll);
+        window.addEventListener('load', handleScroll);
+    </script>
+</body>
+</html>

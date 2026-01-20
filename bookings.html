@@ -1,0 +1,1205 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="TravelRebel Bookings - Search, manage, and book your dream holidays with ease.">
+    <title>TravelRebel - Bookings</title>
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/869/869149.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary-pink: #FF007F;
+            --primary-blue: #00B0FF;
+            --primary-orange: #FF5F00;
+            --neutral-black: #1A1A1A;
+            --neutral-white: #FFFFFF;
+            --neutral-silver: #C0C0C0;
+            --neutral-gray: #F7FAFC;
+            --gold: #FFD700;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, var(--primary-pink), var(--primary-orange), var(--primary-blue));
+            color: var(--neutral-black);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+            transition: background 0.5s ease, color 0.5s ease;
+        }
+        body.dark {
+            background: linear-gradient(135deg, #1a202c, #4a5568);
+            color: var(--neutral-white);
+        }
+        .header {
+            background: linear-gradient(to right, var(--primary-blue), var(--primary-orange));
+            color: var(--neutral-white);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 30;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 900;
+            font-size: 1.8rem;
+            letter-spacing: 1px;
+        }
+        .currency-toggle select {
+            padding: 0.5rem;
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.2);
+            color: var(--neutral-white);
+            border: none;
+        }
+        .hero {
+            height: 500px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: var(--neutral-white);
+            padding: 2rem;
+            overflow: hidden;
+        }
+        .hero-slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+        }
+        .hero-slide.active {
+            opacity: 1;
+        }
+        .hero-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.3));
+        }
+        .hero-content h1 {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 900;
+            font-size: 3rem;
+            letter-spacing: 2px;
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.6);
+            line-height: 1.2;
+            animation: fadeInUp 1s ease-out;
+        }
+        .hero-content p {
+            font-size: 1.5rem;
+            margin: 1rem 0;
+            font-weight: 300;
+            max-width: 600px;
+            animation: fadeInUp 1s ease-out 0.3s;
+            animation-fill-mode: both;
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .dashboard-section {
+            padding: 3rem 2rem;
+            background: var(--neutral-white);
+            margin: 1.5rem auto;
+            max-width: 1400px;
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+        .dashboard-section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .dashboard-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('https://www.transparenttextures.com/patterns/subtle-stripes.png');
+            opacity: 0.05;
+            z-index: 0;
+        }
+        body.dark .dashboard-section {
+            background: #2d3748;
+        }
+        .section-title {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 900;
+            font-size: 2rem;
+            color: var(--primary-blue);
+            margin-bottom: 1.5rem;
+            border-bottom: 3px solid var(--neutral-silver);
+            padding-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            position: relative;
+            z-index: 1;
+        }
+        body.dark .section-title {
+            color: var(--primary-orange);
+            border-bottom: 3px solid #4b5563;
+        }
+        .search-bar {
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-pink));
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            position: relative;
+            color: var(--neutral-white);
+        }
+        .search-bar .input-wrapper {
+            position: relative;
+            flex: 1;
+            min-width: 200px;
+        }
+        .search-bar input, .search-bar select {
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: 8px;
+            border: none;
+            background: rgba(255, 255, 255, 0.2);
+            color: var(--neutral-white);
+            font-size: 14px;
+        }
+        .search-bar input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        .suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background: var(--neutral-white);
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            display: none;
+            z-index: 10;
+        }
+        body.dark .suggestions {
+            background: #2d3748;
+        }
+        .suggestions div {
+            padding: 0.5rem 1rem;
+            color: var(--neutral-black);
+            cursor: pointer;
+        }
+        body.dark .suggestions div {
+            color: var(--neutral-white);
+        }
+        .suggestions div:hover {
+            background: var(--neutral-gray);
+        }
+        body.dark .suggestions div:hover {
+            background: #4b5563;
+        }
+        .travelers-popup {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: var(--neutral-white);
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            padding: 1rem;
+            display: none;
+            z-index: 10;
+        }
+        body.dark .travelers-popup {
+            background: #2d3748;
+        }
+        .travelers-popup div {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        .travelers-popup button {
+            padding: 0.25rem 0.5rem;
+            background: var(--primary-blue);
+            color: var(--neutral-white);
+            border: none;
+            border-radius: 5px;
+        }
+        body.dark .travelers-popup button {
+            background: var(--primary-orange);
+        }
+        .search-bar button {
+            padding: 0.75rem 2rem;
+            background: linear-gradient(90deg, var(--primary-pink), var(--primary-blue));
+            border-radius: 50px;
+            color: var(--neutral-white);
+            border: none;
+            cursor: not-allowed;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            font-size: 14px;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            position: relative;
+        }
+        .filter-button, .filter-select {
+            padding: 0.5rem 1rem;
+            background: var(--neutral-gray);
+            border-radius: 25px;
+            border: 1px solid var(--neutral-silver);
+            cursor: pointer;
+            transition: background 0.3s ease, border-color 0.3s ease;
+        }
+        body.dark .filter-button, body.dark .filter-select {
+            background: #4b5563;
+            border: 1px solid #4b5563;
+        }
+        .filter-button:hover, .filter-button.active {
+            background: var(--primary-blue);
+            color: var(--neutral-white);
+            border-color: var(--primary-blue);
+        }
+        body.dark .filter-button:hover, body.dark .filter-button.active {
+            background: var(--primary-orange);
+            border-color: var(--primary-orange);
+        }
+        .filter-select {
+            padding: 0.5rem;
+            background: var(--neutral-gray);
+            border-radius: 8px;
+            border: 1px solid var(--neutral-silver);
+        }
+        body.dark .filter-select {
+            background: #4b5563;
+            border: 1px solid #4b5563;
+        }
+        .filter-count {
+            position: absolute;
+            top: -1rem;
+            right: 0;
+            background: var(--gold);
+            color: var(--neutral-black);
+            padding: 0.25rem 0.75rem;
+            border-radius: 25px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .clear-filters {
+            padding: 0.5rem 1rem;
+            background: var(--neutral-silver);
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        .clear-filters:hover {
+            background: var(--primary-pink);
+            color: var(--neutral-white);
+        }
+        .milestone-badge {
+            position: absolute;
+            top: -1rem;
+            right: 2rem;
+            background: var(--gold);
+            color: var(--neutral-black);
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 600;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        .stats-card, .booking-card, .experience-card, .recommendation-card {
+            background: var(--neutral-gray);
+            padding: 1.5rem;
+            border-radius: 15px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        body.dark .stats-card, body.dark .booking-card, body.dark .experience-card, body.dark .recommendation-card {
+            background: #4b5563;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+        }
+        .stats-card:hover, .booking-card:hover, .experience-card:hover, .recommendation-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15), 0 0 15px var(--gold);
+        }
+        .booking-card, .experience-card, .recommendation-card {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        .booking-card img, .experience-card img, .recommendation-card img {
+            width: 80px;
+            height: 80px;
+            border-radius: 10px;
+            object-fit: cover;
+        }
+        .provider-logo {
+            height: 30px;
+            margin-right: 0.5rem;
+        }
+        .status-bar {
+            width: 100%;
+            height: 10px;
+            background: #e2e8f0;
+            border-radius: 5px;
+            margin-top: 0.5rem;
+        }
+        .status-fill {
+            height: 100%;
+            border-radius: 5px;
+            transition: width 1s ease-in-out;
+        }
+        .status-fill.confirmed {
+            background: var(--primary-blue);
+            width: 100%;
+        }
+        .status-fill.pending {
+            background: var(--primary-orange);
+            width: 50%;
+        }
+        .cta-button {
+            padding: 10px 20px;
+            background: linear-gradient(90deg, var(--primary-pink), var(--primary-blue));
+            border-radius: 50px;
+            color: var(--neutral-white);
+            border: none;
+            cursor: pointer;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            font-size: 14px;
+            transition: transform 0.3s ease, background 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .cta-button:hover {
+            background: linear-gradient(90deg, var(--primary-orange), var(--primary-pink));
+            transform: scale(1.05);
+        }
+        .cta-button:hover::after {
+            content: '🎉';
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            font-size: 20px;
+            animation: confetti 1s infinite;
+        }
+        .cancel-button {
+            padding: 10px 20px;
+            background: var(--neutral-silver);
+            border-radius: 50px;
+            color: var(--neutral-black);
+            border: none;
+            cursor: pointer;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            font-size: 14px;
+            transition: background 0.3s ease;
+        }
+        body.dark .cancel-button {
+            background: #4b5563;
+            color: var(--neutral-white);
+        }
+        .cancel-button:hover {
+            background: var(--primary-pink);
+            color: var(--neutral-white);
+        }
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+        }
+        .modal-content {
+            background: var(--neutral-white);
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+            position: relative;
+        }
+        body.dark .modal-content {
+            background: #2d3748;
+        }
+        .modal-content .close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: var(--neutral-gray);
+            border-radius: 10px;
+            margin-bottom: 0.5rem;
+        }
+        body.dark .checklist-item {
+            background: #4b5563;
+        }
+        .checklist-item input[type="checkbox"] {
+            accent-color: var(--primary-blue);
+        }
+        body.dark .checklist-item input[type="checkbox"] {
+            accent-color: var(--primary-orange);
+        }
+        .carousel {
+            position: relative;
+            overflow: hidden;
+        }
+        .carousel-container {
+            display: flex;
+            transition: transform 0.5s ease;
+        }
+        .carousel-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--primary-blue);
+            color: var(--neutral-white);
+            padding: 0.5rem;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 10;
+        }
+        body.dark .carousel-arrow {
+            background: var(--primary-orange);
+        }
+        .carousel-arrow.left {
+            left: 1rem;
+        }
+        .carousel-arrow.right {
+            right: 1rem;
+        }
+        .favorite-button {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        .favorite-button.active {
+            color: var(--primary-pink);
+        }
+        .trend-chart {
+            width: 100%;
+            height: 150px;
+            background: linear-gradient(to right, var(--primary-blue), var(--primary-pink));
+            border-radius: 10px;
+            margin-top: 1rem;
+        }
+        .chat-bubble {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--primary-blue);
+            color: var(--neutral-white);
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            z-index: 40;
+        }
+        body.dark .chat-bubble {
+            background: var(--primary-orange);
+        }
+        .chat-window {
+            position: fixed;
+            bottom: 6rem;
+            right: 2rem;
+            width: 300px;
+            background: var(--neutral-white);
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            display: none;
+            z-index: 40;
+        }
+        body.dark .chat-window {
+            background: #2d3748;
+        }
+        .chat-header {
+            background: var(--primary-blue);
+            color: var(--neutral-white);
+            padding: 1rem;
+            border-radius: 15px 15px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        body.dark .chat-header {
+            background: var(--primary-orange);
+        }
+        .chat-body {
+            padding: 1rem;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .chat-footer {
+            padding: 1rem;
+            border-top: 1px solid var(--neutral-silver);
+        }
+        body.dark .chat-footer {
+            border-top: 1px solid #4b5563;
+        }
+        .chat-footer input {
+            width: 100%;
+            padding: 0.5rem;
+            border-radius: 25px;
+            border: 1px solid var(--neutral-silver);
+        }
+        body.dark .chat-footer input {
+            border: 1px solid #4b5563;
+        }
+        .footer {
+            background: linear-gradient(to right, var(--primary-blue), var(--primary-orange));
+            color: var(--neutral-white);
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+        }
+        .footer a {
+            color: var(--neutral-white);
+            text-decoration: underline;
+            transition: color 0.3s ease;
+        }
+        .footer a:hover {
+            color: var(--primary-pink);
+        }
+        .dark-mode-toggle {
+            transition: transform 0.3s ease;
+        }
+        .dark-mode-toggle:hover {
+            transform: rotate(20deg);
+        }
+        @keyframes confetti {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(50px) rotate(360deg); opacity: 0; }
+        }
+        @media (max-width: 1024px) {
+            .stats-grid, .booking-grid, .experience-grid, .recommendation-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        @media (max-width: 768px) {
+            .hero {
+                height: 400px;
+            }
+            .hero-content h1 {
+                font-size: 2rem;
+            }
+            .hero-content p {
+                font-size: 1.2rem;
+            }
+            .section-title {
+                font-size: 1.75rem;
+            }
+            .search-bar {
+                flex-direction: column;
+            }
+            .search-bar .input-wrapper {
+                min-width: 100%;
+            }
+            .milestone-badge {
+                top: 0;
+                right: 1rem;
+                font-size: 12px;
+            }
+            .chat-window {
+                width: 250px;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Header -->
+    <header class="header">
+        <h1>TravelRebel Bookings</h1>
+        <div class="flex items-center gap-4">
+            <div class="currency-toggle">
+                <select id="currency" onchange="updateCurrency(this.value)" aria-label="Select currency">
+                    <option value="GBP">GBP</option>
+                    <option value="EUR">EUR</option>
+                    <option value="USD">USD</option>
+                </select>
+            </div>
+            <button class="dark-mode-toggle text-2xl" onclick="toggleDarkMode()" aria-label="Toggle dark mode">🌙</button>
+            <a href="dashboard.html" class="cta-button" aria-label="Back to dashboard">Back to Dashboard</a>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-slide" style="background-image: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80')"></div>
+        <div class="hero-slide" style="background-image: url('https://images.unsplash.com/photo-1506929562872-bb421503ef21?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80')"></div>
+        <div class="hero-slide" style="background-image: url('https://images.unsplash.com/photo-1519681393784-d120267933ba?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80')"></div>
+        <div class="hero-overlay"></div>
+        <div class="hero-content relative z-10">
+            <h1>Book Your Dream Holiday</h1>
+            <p>Discover Your Perfect Getaway with TravelRebel</p>
+            <a href="#search" class="cta-button mt-4" onclick="smoothScrollTo('search')" aria-label="Start booking">Start Booking</a>
+        </div>
+    </section>
+
+    <!-- Booking Insights Section -->
+    <section class="dashboard-section">
+        <h2 class="section-title"><i class="fas fa-tachometer-alt text-blue-500"></i> Booking Insights</h2>
+        <div class="stats-grid grid grid-cols-3 gap-6">
+            <div class="stats-card">
+                <h3 class="text-xl font-semibold text-primary-pink">Total Bookings</h3>
+                <p class="text-2xl font-bold mt-2">12</p>
+            </div>
+            <div class="stats-card">
+                <h3 class="text-xl font-semibold text-primary-pink">Upcoming Trips</h3>
+                <p class="text-2xl font-bold mt-2">3</p>
+            </div>
+            <div class="stats-card">
+                <h3 class="text-xl font-semibold text-primary-pink">Total Commission</h3>
+                <p class="text-2xl font-bold mt-2"><span class="price" data-gbp="1200">£1,200</span></p>
+                <div class="trend-chart"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Search & Filters Section -->
+    <section class="dashboard-section" id="search">
+        <h2 class="section-title"><i class="fas fa-search text-blue-500"></i> Search Holidays</h2>
+        <div class="search-bar">
+            <div class="input-wrapper">
+                <input type="text" id="destination" placeholder="Destination (e.g., Mallorca)" oninput="showSuggestions()" aria-label="Destination">
+                <div class="suggestions" id="suggestions">
+                    <div onclick="selectSuggestion('Mallorca')">Mallorca</div>
+                    <div onclick="selectSuggestion('Santorini')">Santorini</div>
+                    <div onclick="selectSuggestion('New York')">New York</div>
+                </div>
+            </div>
+            <div class="input-wrapper">
+                <input type="date" value="2025-05-20" aria-label="Departure date">
+            </div>
+            <div class="input-wrapper">
+                <input type="date" value="2025-05-27" aria-label="Return date">
+            </div>
+            <div class="input-wrapper">
+                <select id="travelers" onchange="updateTravelersDisplay()" onclick="showTravelersPopup()" aria-label="Travelers">
+                    <option value="2-0-0">2 Adults, 0 Children</option>
+                </select>
+                <div class="travelers-popup" id="travelersPopup">
+                    <div>
+                        <span>Adults</span>
+                        <div>
+                            <button onclick="adjustTravelers('adults', -1)">-</button>
+                            <span id="adultsCount">2</span>
+                            <button onclick="adjustTravelers('adults', 1)">+</button>
+                        </div>
+                    </div>
+                    <div>
+                        <span>Children</span>
+                        <div>
+                            <button onclick="adjustTravelers('children', -1)">-</button>
+                            <span id="childrenCount">0</span>
+                            <button onclick="adjustTravelers('children', 1)">+</button>
+                        </div>
+                    </div>
+                    <div>
+                        <span>Infants</span>
+                        <div>
+                            <button onclick="adjustTravelers('infants', -1)">-</button>
+                            <span id="infantsCount">0</span>
+                            <button onclick="adjustTravelers('infants', 1)">+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button disabled aria-label="Search holidays">Search</button>
+        </div>
+        <div class="filters">
+            <div class="filter-button" onclick="toggleFilter(this)">3 Stars</div>
+            <div class="filter-button" onclick="toggleFilter(this)">4 Stars</div>
+            <div class="filter-button" onclick="toggleFilter(this)">5 Stars</div>
+            <select class="filter-select" aria-label="Board basis">
+                <option>Board Basis</option>
+                <option>All Inclusive</option>
+                <option>Half Board</option>
+                <option>Bed & Breakfast</option>
+            </select>
+            <select class="filter-select" aria-label="Budget">
+                <option>Budget</option>
+                <option>Up to £500pp</option>
+                <option>Up to £1,000pp</option>
+                <option>Up to £2,000pp</option>
+            </select>
+            <select class="filter-select" aria-label="Facilities">
+                <option>Facilities</option>
+                <option>Pool</option>
+                <option>Spa</option>
+                <option>Gym</option>
+            </select>
+            <select class="filter-select" aria-label="Holiday Type">
+                <option>Holiday Type</option>
+                <option>Beach</option>
+                <option>City Break</option>
+                <option>Adventure</option>
+            </select>
+            <select class="filter-select" aria-label="Duration">
+                <option>Duration</option>
+                <option>3-5 Nights</option>
+                <option>7 Nights</option>
+                <option>14+ Nights</option>
+            </select>
+            <div class="clear-filters" onclick="clearFilters()">Clear Filters</div>
+            <div class="filter-count" id="filterCount">0 filters applied</div>
+        </div>
+    </section>
+
+    <!-- Bookings Section -->
+    <section class="dashboard-section">
+        <h2 class="section-title"><i class="fas fa-clipboard-list text-blue-500"></i> Your Bookings</h2>
+        <div class="milestone-badge">Book 2 more trips to earn a bonus!</div>
+        <div class="booking-grid grid grid-cols-2 gap-6" id="bookingGrid">
+            <div class="booking-card">
+                <img src="https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" alt="Spain Holiday">
+                <div class="flex-1">
+                    <h3 class="text-lg font-semibold">
+                        <img src="https://cdn.freebiesupply.com/logos/thumbs/2x/tui-logo.png" alt="TUI Logo" class="provider-logo inline-block">
+                        Spain Holiday
+                    </h3>
+                    <p class="mt-2">Value: <span class="price" data-gbp="2400">£2,400</span> | Commission: <span class="price" data-gbp="240">£240</span> | Dates: May 20 - May 27, 2025</p>
+                    <div class="status-bar">
+                        <div class="status-fill confirmed"></div>
+                    </div>
+                    <p class="text-sm mt-1">Status: Confirmed</p>
+                    <div class="flex gap-2 mt-2">
+                        <a href="#" class="cta-button" aria-label="View Spain holiday details">View Details</a>
+                        <button class="cancel-button" onclick="openModal('Spain Holiday')" aria-label="Cancel Spain holiday">Cancel</button>
+                    </div>
+                </div>
+            </div>
+            <div class="booking-card">
+                <img src="https://images.unsplash.com/photo-1436491865332-7a61a109cc05?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" alt="London to NY Flight">
+                <div class="flex-1">
+                    <h3 class="text-lg font-semibold">
+                        <img src="https://cdn.freebiesupply.com/logos/large/2x/british-airways-01-logo-png-transparent.png" alt="British Airways Logo" class="provider-logo inline-block">
+                        London to NY
+                    </h3>
+                    <p class="mt-2">Value: <span class="price" data-gbp="1800">£1,800</span> | Commission: <span class="price" data-gbp="180">£180</span> | Dates: May 22 - May 29, 2025</p>
+                    <div class="status-bar">
+                        <div class="status-fill pending"></div>
+                    </div>
+                    <p class="text-sm mt-1">Status: Pending</p>
+                    <div class="flex gap-2 mt-2">
+                        <a href="#" class="cta-button" aria-label="View London to NY flight details">View Details</a>
+                        <button class="cancel-button" onclick="openModal('London to NY Flight')" aria-label="Cancel London to NY flight">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="text-center mt-6">
+            <button class="cta-button" onclick="loadMoreBookings()" aria-label="Load more bookings">Load More</button>
+        </div>
+    </section>
+
+    <!-- Cancel Booking Modal -->
+    <div class="modal" id="cancelModal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h3 class="text-xl font-semibold text-primary-pink">Cancel Booking</h3>
+            <p class="mt-2">Are you sure you want to cancel your booking for <span id="modalBookingTitle"></span>?</p>
+            <div class="flex gap-4 mt-4 justify-center">
+                <button class="cta-button" onclick="closeModal()" aria-label="Confirm cancellation">Yes, Cancel</button>
+                <button class="cancel-button" onclick="closeModal()" aria-label="Keep booking">No, Keep</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Travel Checklist Section -->
+    <section class="dashboard-section">
+        <h2 class="section-title"><i class="fas fa-check-circle text-green-500"></i> Travel Checklist</h2>
+        <div class="checklist">
+            <div class="checklist-item">
+                <input type="checkbox" id="passport" onchange="updateChecklist('passport')">
+                <label for="passport">Check Passport Validity</label>
+            </div>
+            <div class="checklist-item">
+                <input type="checkbox" id="insurance" onchange="updateChecklist('insurance')">
+                <label for="insurance">Purchase Travel Insurance</label>
+            </div>
+            <div class="checklist-item">
+                <input type="checkbox" id="packing" onchange="updateChecklist('packing')">
+                <label for="packing">Pack Essentials</label>
+            </div>
+        </div>
+        <div class="text-center mt-4">
+            <button class="cta-button" onclick="markAllComplete()" aria-label="Mark all complete">Mark All Complete</button>
+        </div>
+    </section>
+
+    <!-- TUI Experiences Section -->
+    <section class="dashboard-section">
+        <h2 class="section-title"><i class="fas fa-globe text-yellow-500"></i> TUI Experiences</h2>
+        <div class="carousel">
+            <div class="carousel-arrow left" onclick="moveCarousel(-1)">&#10094;</div>
+            <div class="carousel-container" id="carouselContainer">
+                <div class="experience-card">
+                    <img src="https://images.unsplash.com/photo-1527631746610-bca00a040d60?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" alt="Chichen Itza Tour">
+                    <div class="flex-1">
+                        <h3 class="text-lg font-semibold text-primary-pink">Chichen Itza Tour</h3>
+                        <p class="mt-2">Explore the ancient Maya city with a guided tour.</p>
+                    </div>
+                    <button class="favorite-button" onclick="toggleFavorite(this)" aria-label="Add to favorites"><i class="far fa-heart"></i></button>
+                </div>
+                <div class="experience-card">
+                   <img src="https://images.unsplash.com/photo-1544551763-46a013bb70d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" alt="Shark Bay Experience">
+                    <div class="flex-1">
+                        <h3 class="text-lg font-semibold text-primary-pink">Shark Bay Experience</h3>
+                        <p class="mt-2">Interact with lemon sharks in their natural habitat.</p>
+                    </div>
+                    <button class="favorite-button" onclick="toggleFavorite(this)" aria-label="Add to favorites"><i class="far fa-heart"></i></button>
+                </div>
+                <div class="experience-card">
+                   <img src="https://images.unsplash.com/photo-1506929562872-bb421503ef21?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" alt="Cape Verde Sunset">
+                    <div class="flex-1">
+                        <h3 class="text-lg font-semibold text-primary-pink">Cape Verde Sunset</h3>
+                        <p class="mt-2">Enjoy a beach dinner with live music and stunning views.</p>
+                    </div>
+                    <button class="favorite-button" onclick="toggleFavorite(this)" aria-label="Add to favorites"><i class="far fa-heart"></i></button>
+                </div>
+            </div>
+            <div class="carousel-arrow right" onclick="moveCarousel(1)">&#10095;</div>
+        </div>
+    </section>
+
+    <!-- Personalized Recommendations Section -->
+    <section class="dashboard-section">
+        <h2 class="section-title"><i class="fas fa-lightbulb text-yellow-500"></i> Recommended for You</h2>
+        <div class="recommendation-grid grid grid-cols-3 gap-6">
+            <div class="recommendation-card">
+                <img src="https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" alt="Santorini">
+                <div class="flex-1">
+                    <h3 class="text-lg font-semibold text-primary-pink">Santorini Getaway</h3>
+                    <p class="mt-2">Based on your love for beach destinations.</p>
+                </div>
+            </div>
+            <div class="recommendation-card">
+                <img src="https://images.unsplash.com/photo-1431274172761-fca41d930114?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" alt="Paris">
+                <div class="flex-1">
+                    <h3 class="text-lg font-semibold text-primary-pink">Paris City Break</h3>
+                    <p class="mt-2">Based on your interest in city trips.</p>
+                </div>
+            </div>
+            <div class="recommendation-card">
+                <img src="https://images.unsplash.com/photo-1509316785289-025f5b846b35?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" alt="Safari">
+                <div class="flex-1">
+                    <h3 class="text-lg font-semibold text-primary-pink">African Safari</h3>
+                    <p class="mt-2">Based on your interest in adventure travel.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Live Chat -->
+    <div class="chat-bubble" onclick="toggleChat()">
+        <i class="fas fa-comment"></i>
+    </div>
+    <div class="chat-window" id="chatWindow">
+        <div class="chat-header">
+            <span>Live Chat Support</span>
+            <span class="close" onclick="toggleChat()">&times;</span>
+        </div>
+        <div class="chat-body">
+            <p>Welcome to TravelRebel Support! How can we assist you today?</p>
+        </div>
+        <div class="chat-footer">
+            <input type="text" placeholder="Type a message..." aria-label="Type a message">
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>© 2025 TravelRebel. All rights reserved.</p>
+        <p class="mt-2">Contact us: <a href="mailto:support@travelrebel.com">support@travelrebel.com</a> | +44 123 456 7890</p>
+    </footer>
+
+    <script>
+        let currentSlide = 0;
+        let carouselPosition = 0;
+        let filterCount = 0;
+        let adults = 2, children = 0, infants = 0;
+        let exchangeRates = { GBP: 1, EUR: 1.18, USD: 1.31 }; // Mocked rates
+
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark');
+            const toggle = document.querySelector('.dark-mode-toggle');
+            toggle.textContent = document.body.classList.contains('dark') ? '☀️' : '🌙';
+            toggle.setAttribute('aria-label', document.body.classList.contains('dark') ? 'Switch to light mode' : 'Switch to dark mode');
+        }
+
+        function handleScroll() {
+            const sections = document.querySelectorAll('.dashboard-section');
+            const triggerPoint = window.innerHeight * 0.8;
+            sections.forEach(section => {
+                const sectionTop = section.getBoundingClientRect().top;
+                if (sectionTop < triggerPoint) {
+                    section.classList.add('visible');
+                }
+            });
+        }
+
+        function smoothScrollTo(sectionId) {
+            document.getElementById(sectionId).scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function cycleHeroSlides() {
+            const slides = document.querySelectorAll('.hero-slide');
+            slides[currentSlide].classList.remove('active');
+            currentSlide = (currentSlide + 1) % slides.length;
+            slides[currentSlide].classList.add('active');
+        }
+
+        function showSuggestions() {
+            const input = document.getElementById('destination').value;
+            const suggestions = document.getElementById('suggestions');
+            if (input.length > 0) {
+                suggestions.style.display = 'block';
+            } else {
+                suggestions.style.display = 'none';
+            }
+        }
+
+        function selectSuggestion(value) {
+            document.getElementById('destination').value = value;
+            document.getElementById('suggestions').style.display = 'none';
+        }
+
+        function showTravelersPopup() {
+            document.getElementById('travelersPopup').style.display = 'block';
+        }
+
+        function adjustTravelers(type, change) {
+            if (type === 'adults') {
+                adults = Math.max(1, adults + change);
+                document.getElementById('adultsCount').textContent = adults;
+            } else if (type === 'children') {
+                children = Math.max(0, children + change);
+                document.getElementById('childrenCount').textContent = children;
+            } else if (type === 'infants') {
+                infants = Math.max(0, infants + change);
+                document.getElementById('infantsCount').textContent = infants;
+            }
+            updateTravelersDisplay();
+        }
+
+        function updateTravelersDisplay() {
+            const travelersSelect = document.getElementById('travelers');
+            travelersSelect.options[0].text = `${adults} Adults, ${children} Children, ${infants} Infants`;
+            travelersSelect.options[0].value = `${adults}-${children}-${infants}`;
+        }
+
+        document.addEventListener('click', function(event) {
+            const popup = document.getElementById('travelersPopup');
+            const travelersSelect = document.getElementById('travelers');
+            if (!popup.contains(event.target) && event.target !== travelersSelect) {
+                popup.style.display = 'none';
+            }
+            const suggestions = document.getElementById('suggestions');
+            const destinationInput = document.getElementById('destination');
+            if (!suggestions.contains(event.target) && event.target !== destinationInput) {
+                suggestions.style.display = 'none';
+            }
+        });
+
+        function toggleFilter(button) {
+            button.classList.toggle('active');
+            filterCount = document.querySelectorAll('.filter-button.active').length;
+            document.getElementById('filterCount').textContent = `${filterCount} filters applied`;
+        }
+
+        function clearFilters() {
+            document.querySelectorAll('.filter-button.active').forEach(button => button.classList.remove('active'));
+            filterCount = 0;
+            document.getElementById('filterCount').textContent = '0 filters applied';
+        }
+
+        function openModal(bookingTitle) {
+            document.getElementById('modalBookingTitle').textContent = bookingTitle;
+            document.getElementById('cancelModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('cancelModal').style.display = 'none';
+        }
+
+        function loadMoreBookings() {
+            const bookingGrid = document.getElementById('bookingGrid');
+            const newBooking = `
+                <div class="booking-card">
+                    <img src="https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" alt="Santorini Getaway">
+                    <div class="flex-1">
+                        <h3 class="text-lg font-semibold">
+                            <img src="https://cdn.freebiesupply.com/logos/thumbs/2x/expedia-logo.png" alt="Expedia Logo" class="provider-logo inline-block">
+                            Santorini Getaway
+                        </h3>
+                        <p class="mt-2">Value: <span class="price" data-gbp="3000">£3,000</span> | Commission: <span class="price" data-gbp="300">£300</span> | Dates: Jun 1 - Jun 8, 2025</p>
+                        <div class="status-bar">
+                            <div class="status-fill confirmed"></div>
+                        </div>
+                        <p class="text-sm mt-1">Status: Confirmed</p>
+                        <div class="flex gap-2 mt-2">
+                            <a href="#" class="cta-button" aria-label="View Santorini getaway details">View Details</a>
+                            <button class="cancel-button" onclick="openModal('Santorini Getaway')" aria-label="Cancel Santorini getaway">Cancel</button>
+                        </div>
+                    </div>
+                </div>`;
+            bookingGrid.insertAdjacentHTML('beforeend', newBooking);
+        }
+
+        function updateChecklist(itemId) {
+            const checkbox = document.getElementById(itemId);
+            localStorage.setItem(itemId, checkbox.checked);
+        }
+
+        function loadChecklist() {
+            ['passport', 'insurance', 'packing'].forEach(itemId => {
+                const checkbox = document.getElementById(itemId);
+                checkbox.checked = localStorage.getItem(itemId) === 'true';
+            });
+        }
+
+        function markAllComplete() {
+            ['passport', 'insurance', 'packing'].forEach(itemId => {
+                const checkbox = document.getElementById(itemId);
+                checkbox.checked = true;
+                localStorage.setItem(itemId, true);
+            });
+            const button = document.querySelector('.checklist + div .cta-button');
+            button.style.animation = 'pulse 1s infinite';
+        }
+
+        function moveCarousel(direction) {
+            const container = document.getElementById('carouselContainer');
+            const cards = document.querySelectorAll('.experience-card');
+            const cardWidth = cards[0].offsetWidth + 24; // Including gap
+            const maxPosition = 0;
+            const minPosition = -(cards.length - 3) * cardWidth;
+            carouselPosition += direction * cardWidth;
+            if (carouselPosition > maxPosition) carouselPosition = maxPosition;
+            if (carouselPosition < minPosition) carouselPosition = minPosition;
+            container.style.transform = `translateX(${carouselPosition}px)`;
+        }
+
+        function toggleFavorite(button) {
+            button.classList.toggle('active');
+            const icon = button.querySelector('i');
+            icon.classList.toggle('far');
+            icon.classList.toggle('fas');
+        }
+
+        function toggleChat() {
+            const chatWindow = document.getElementById('chatWindow');
+            chatWindow.style.display = chatWindow.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function updateCurrency(currency) {
+            const prices = document.querySelectorAll('.price');
+            prices.forEach(price => {
+                const gbpValue = parseFloat(price.dataset.gbp);
+                const newValue = (gbpValue * exchangeRates[currency]).toFixed(2);
+                price.textContent = currency === 'GBP' ? `£${gbpValue}` : currency === 'EUR' ? `€${newValue}` : `$${newValue}`;
+            });
+        }
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+            }
+        });
+
+        window.addEventListener('scroll', handleScroll);
+        window.addEventListener('load', () => {
+            handleScroll();
+            setInterval(cycleHeroSlides, 5000);
+            cycleHeroSlides();
+            loadChecklist();
+        });
+    </script>
+</body>
+</html>

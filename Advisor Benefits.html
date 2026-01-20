@@ -1,0 +1,689 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="TravelRebel - Become an independent travel advisor and earn up to 80% commission with flexible work and full support.">
+    <title>TravelRebel - Advisor Benefits</title>
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/869/869149.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;700;900&family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary-pink: #FF007F;
+            --primary-blue: #00B0FF;
+            --primary-orange: #FF5F00;
+            --neutral-black: #1A1A1A;
+            --neutral-white: #FFFFFF;
+            --neutral-gray: #F7FAFC;
+            --gold: #FFD700;
+            --glass-bg: rgba(255, 255, 255, 0.15);
+            --glass-border: rgba(255, 255, 255, 0.3);
+        }
+
+        body {
+            font-family: 'Open Sans', sans-serif;
+            background: linear-gradient(135deg, var(--primary-pink), var(--primary-orange), var(--primary-blue));
+            color: var(--neutral-black);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+            transition: background 0.5s ease, color 0.5s ease;
+        }
+        body.dark {
+            background: linear-gradient(135deg, #1a202c, #4a5568);
+            color: var(--neutral-white);
+        }
+        .header {
+            background: linear-gradient(to right, var(--primary-blue), var(--primary-orange));
+            color: var(--neutral-white);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 30;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: padding 0.3s ease;
+        }
+        .header.shrink {
+            padding: 0.5rem 2rem;
+        }
+        /* NEW LOGO STYLES */
+        .logo-text {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 900;
+            font-size: 1.8rem;
+            letter-spacing: 1px;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        .hero {
+            background: url('https://images.unsplash.com/photo-1493787039806-2edcbe808aa6?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=90') no-repeat center center/cover;
+            height: 600px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: var(--neutral-white);
+            padding: 2rem;
+        }
+        .hero-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.2));
+        }
+        .hero-content h1 {
+            font-family: 'Raleway', sans-serif;
+            font-weight: 900;
+            font-size: 3.5rem;
+            letter-spacing: 2px;
+            text-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+            animation: fadeInUp 1s ease-out;
+        }
+        .hero-content p {
+            font-size: 1.6rem;
+            margin: 1rem 0;
+            font-weight: 300;
+            animation: fadeInUp 1s ease-out 0.3s;
+            animation-fill-mode: both;
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .cta-button {
+            padding: 12px 24px;
+            background: linear-gradient(90deg, var(--primary-pink), var(--primary-blue));
+            border-radius: 50px;
+            color: var(--neutral-white);
+            border: 2px solid transparent;
+            border-image: linear-gradient(90deg, var(--primary-pink), var(--primary-blue)) 1;
+            cursor: pointer;
+            font-family: 'Raleway', sans-serif;
+            font-weight: 700;
+            font-size: 16px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+            display: inline-block;
+            box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.3), 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: inset 0 0 15px rgba(255, 255, 255, 0.5), 0 8px 20px rgba(0, 0, 0, 0.3), 0 0 20px var(--gold);
+        }
+        .cta-button::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.5s ease, height 0.5s ease;
+        }
+        .cta-button:active::after {
+            width: 200px;
+            height: 200px;
+        }
+        .section {
+            padding: 3rem;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            margin: 2rem auto;
+            max-width: 1500px;
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+            position: relative;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+        .section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        body.dark .section {
+            background: rgba(45, 55, 72, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .section-title {
+            font-family: 'Raleway', sans-serif;
+            font-weight: 900;
+            font-size: 3rem;
+            color: var(--primary-blue);
+            margin-bottom: 2rem;
+            text-align: center;
+            position: relative;
+        }
+        body.dark .section-title {
+            color: var(--primary-orange);
+        }
+        .benefit-grid, .commission-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+        }
+        @media (max-width: 1024px) {
+            .benefit-grid, .commission-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (max-width: 768px) {
+            .benefit-grid, .commission-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .benefit-card, .commission-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.5s ease, box-shadow 0.5s ease;
+            text-align: center;
+            position: relative;
+        }
+        body.dark .benefit-card, body.dark .commission-card {
+            background: rgba(45, 55, 72, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .benefit-card:hover, .commission-card:hover {
+            transform: translateY(-10px) rotateX(5deg) rotateY(5deg);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2), 0 0 30px var(--gold);
+        }
+        .benefit-card i, .commission-card i {
+            font-size: 2.5rem;
+            color: var(--primary-blue);
+            margin-bottom: 1rem;
+            transition: transform 0.3s ease;
+        }
+        .benefit-card:hover i, .commission-card:hover i {
+            transform: scale(1.2) rotate(10deg);
+        }
+        body.dark .benefit-card i, body.dark .commission-card i {
+            color: var(--primary-orange);
+        }
+        .benefit-card h3, .commission-card h3 {
+            font-family: 'Raleway', sans-serif;
+            font-weight: 700;
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+        .benefit-card p, .commission-card p {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+        .commission-card p span {
+            color: var(--primary-pink);
+            font-weight: 600;
+        }
+        .commission-calculator {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-top: 2rem;
+        }
+        body.dark .commission-calculator {
+            background: rgba(45, 55, 72, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .slider-container {
+            margin: 1rem 0;
+            position: relative;
+        }
+        .slider-container input {
+            width: 100%;
+            height: 8px;
+            background: linear-gradient(to right, var(--primary-blue), var(--primary-pink));
+            border-radius: 5px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        .slider-container input::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: var(--gold);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 10px var(--gold);
+            transition: transform 0.3s ease;
+        }
+        .slider-container input::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+        body.dark .slider-container input {
+            background: linear-gradient(to right, var(--primary-orange), var(--primary-pink));
+        }
+        .calculation-result {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-top: 1rem;
+            text-align: center;
+        }
+        .calculation-result span {
+            color: var(--primary-pink);
+        }
+        .testimonial-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+        }
+        @media (max-width: 1024px) {
+            .testimonial-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (max-width: 768px) {
+            .testimonial-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .testimonial-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.5s ease, box-shadow 0.5s ease;
+        }
+        body.dark .testimonial-card {
+            background: rgba(45, 55, 72, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .testimonial-card:hover {
+            transform: translateY(-10px) rotateX(5deg) rotateY(5deg);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2), 0 0 30px var(--gold);
+        }
+        .testimonial-card p {
+            font-style: italic;
+            font-size: 0.95rem;
+            margin-bottom: 1rem;
+        }
+        .testimonial-card h4 {
+            font-family: 'Raleway', sans-serif;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--primary-blue);
+        }
+        body.dark .testimonial-card h4 {
+            color: var(--primary-orange);
+        }
+        .training-list {
+            list-style: none;
+            padding: 0;
+            margin: 1.5rem 0;
+        }
+        .training-list li {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+            font-size: 1rem;
+        }
+        .training-list li i {
+            color: var(--primary-blue);
+            margin-right: 0.75rem;
+        }
+        body.dark .training-list li i {
+            color: var(--primary-orange);
+        }
+        .faq-item {
+            margin-bottom: 1rem;
+        }
+        .faq-item summary {
+            font-family: 'Raleway', sans-serif;
+            font-weight: 600;
+            font-size: 1.2rem;
+            padding: 1rem;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.3s ease, transform 0.3s ease;
+        }
+        body.dark .faq-item summary {
+            background: rgba(45, 55, 72, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .faq-item summary:hover {
+            background: linear-gradient(90deg, var(--primary-blue), var(--primary-pink));
+            color: var(--neutral-white);
+            transform: translateX(5px);
+        }
+        body.dark .faq-item summary:hover {
+            background: linear-gradient(90deg, var(--primary-orange), var(--primary-pink));
+        }
+        .faq-item p {
+            padding: 1rem;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+        .trust-badges {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        .trust-badge {
+            background: var(--gold);
+            color: var(--neutral-black);
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: transform 0.3s ease;
+        }
+        .trust-badge:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px var(--gold);
+        }
+        .footer {
+            background: linear-gradient(to right, var(--primary-blue), var(--primary-orange));
+            color: var(--neutral-white);
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+        }
+        .footer a {
+            color: var(--neutral-white);
+            text-decoration: underline;
+            transition: color 0.3s ease;
+        }
+        .footer a:hover {
+            color: var(--primary-pink);
+        }
+        .dark-mode-toggle {
+            transition: transform 0.3s ease, filter 0.3s ease;
+        }
+        .dark-mode-toggle:hover {
+            transform: rotate(20deg);
+            filter: drop-shadow(0 0 10px var(--gold));
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Header -->
+    <header class="header">
+        <div class="flex items-center gap-4">
+            <h1 class="logo-text">TravelRebel</h1>
+        </div>
+        <div class="flex items-center gap-4">
+            <button class="dark-mode-toggle text-2xl" onclick="toggleDarkMode()" aria-label="Toggle dark mode">🌙</button>
+            <a href="index.html" class="cta-button" aria-label="Back to home">Back to Home</a>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <h1>Be Your Own Boss. Sell Travel. Earn Commission.</h1>
+            <p>Work flexibly, earn up to 80% commission, and unlock exclusive travel perks with TravelRebel.</p>
+            <a href="#signup" class="cta-button" aria-label="Join now">Join Now</a>
+        </div>
+    </section>
+
+    <!-- Benefits Section -->
+    <section class="section">
+        <h2 class="section-title">Why Join TravelRebel?</h2>
+        <div class="benefit-grid">
+            <div class="benefit-card">
+                <i class="fas fa-user"></i>
+                <h3>No Experience Required</h3>
+                <p>Start your travel advisor journey with no prior experience—we provide all the tools you need to succeed.</p>
+            </div>
+            <div class="benefit-card">
+                <i class="fas fa-money-bill-wave"></i>
+                <h3>Earn Up to 80% Commission</h3>
+                <p>Book a £2,000 trip with a 12% supplier commission, and take home £168—your 70% share of the £240 earned.</p>
+            </div>
+            <div class="benefit-card">
+                <i class="fas fa-clock"></i>
+                <h3>Set Your Own Schedule</h3>
+                <p>Work part-time or full-time, from anywhere, fitting your travel business around your lifestyle.</p>
+            </div>
+            <div class="benefit-card">
+                <i class="fas fa-plane"></i>
+                <h3>Access Insider Rates</h3>
+                <p>Enjoy exclusive discounts on hotels, cruises, and tours, plus travel for free through familiarization trips.</p>
+            </div>
+            <div class="benefit-card">
+                <i class="fas fa-graduation-cap"></i>
+                <h3>Full Training Included</h3>
+                <p>Get access to video courses, live webinars, and one-on-one mentorship to build your confidence.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Commission Breakdown Section -->
+    <section class="section">
+        <h2 class="section-title">Commission Breakdown</h2>
+        <div class="commission-grid">
+            <div class="commission-card">
+                <i class="fas fa-hotel"></i>
+                <h3>Hotels</h3>
+                <p>Supplier Commission: 15%<br>Your Share (70%): <span>£210</span> on a £2,000 booking.</p>
+            </div>
+            <div class="commission-card">
+                <i class="fas fa-ship"></i>
+                <h3>Cruises</h3>
+                <p>Supplier Commission: 12%<br>Your Share (70%): <span>£168</span> on a £2,000 booking.</p>
+            </div>
+            <div class="commission-card">
+                <i class="fas fa-plane-departure"></i>
+                <h3>Flights</h3>
+                <p>Supplier Commission: 10%<br>Your Share (70%): <span>£140</span> on a £2,000 booking.</p>
+            </div>
+            <div class="commission-card">
+                <i class="fas fa-map-marked-alt"></i>
+                <h3>Tours</h3>
+                <p>Supplier Commission: 14%<br>Your Share (70%): <span>£196</span> on a £2,000 booking.</p>
+            </div>
+            <div class="commission-card">
+                <i class="fas fa-shield-alt"></i>
+                <h3>Insurance</h3>
+                <p>Supplier Commission: 20%<br>Your Share (70%): <span>£280</span> on a £2,000 booking.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Calculate Your Potential Earnings Section -->
+    <section class="section">
+        <h2 class="section-title">Calculate Your Potential Earnings</h2>
+        <div class="commission-calculator">
+            <div class="slider-container">
+                <label for="travelAmount">Total Travel Booked: <span id="travelValue">£3,000</span></label>
+                <input type="range" id="travelAmount" min="500" max="10000" step="100" value="3000" oninput="calculateEarnings()">
+            </div>
+            <div class="calculation-result">
+                <p>Supplier Commission (12%): <span id="supplierCommission">£360</span></p>
+                <p>Your Earnings (70%): <span id="advisorEarnings">£252</span></p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="section">
+        <h2 class="section-title">What Our Advisors Say</h2>
+        <div class="testimonial-grid">
+            <div class="testimonial-card">
+                <p>"I earned £500 in my first month while working just 10 hours a week. It's the perfect side hustle!"</p>
+                <h4>Sarah M., London</h4>
+            </div>
+            <div class="testimonial-card">
+                <p>"TravelRebel gave me the freedom to travel more—I've been on three free trips this year!"</p>
+                <h4>James T., Manchester</h4>
+            </div>
+            <div class="testimonial-card">
+                <p>"The training made it so easy to start. I booked my first £3,000 trip within a week!"</p>
+                <h4>Emily R., Birmingham</h4>
+            </div>
+            <div class="testimonial-card">
+                <p>"I love the flexibility. I work around my kids' schedule and still earn a great income."</p>
+                <h4>Laura K., Bristol</h4>
+            </div>
+        </div>
+    </section>
+
+    <!-- Training & Support Section -->
+    <section class="section">
+        <h2 class="section-title">Training & Support</h2>
+        <ul class="training-list">
+            <li><i class="fas fa-video"></i> Step-by-step video courses to get you started quickly.</li>
+            <li><i class="fas fa-user-check"></i> One-on-one mentor support to guide you every step of the way.</li>
+            <li><i class="fas fa-handshake"></i> Exclusive relationships with top travel suppliers for better deals.</li>
+            <li><i class="fas fa-users"></i> Join our private community for tips, support, and networking.</li>
+        </ul>
+    </section>
+
+    <!-- FAQs Section -->
+    <section class="section">
+        <h2 class="section-title">Frequently Asked Questions</h2>
+        <details class="faq-item">
+            <summary>Do I need experience to join?</summary>
+            <p>No! TravelRebel provides all the training you need, from video courses to live webinars, so you can start with zero experience.</p>
+        </details>
+        <details class="faq-item">
+            <summary>Can I do this part-time?</summary>
+            <p>Absolutely! You set your own schedule, making it perfect for part-time work alongside your current job or family commitments.</p>
+        </details>
+        <details class="faq-item">
+            <summary>What if I don't sell anything?</summary>
+            <p>There are no quotas or minimums. You earn when you sell, and with our training and support, we'll help you make your first sale.</p>
+        </details>
+        <details class="faq-item">
+            <summary>How soon do I get paid?</summary>
+            <p>Commissions are paid monthly, typically within 30 days after the booking is completed and payment is received from the supplier.</p>
+        </details>
+    </section>
+
+    <!-- Final CTA Section -->
+    <section class="section">
+        <h2 class="section-title">Start Your Travel Business Today</h2>
+        <p class="text-center text-lg mb-4">Join TravelRebel with zero pressure, full support, and a 30-day money-back guarantee.</p>
+        <div class="text-center">
+            <a href="#signup" class="cta-button" aria-label="Get started">Get Started</a>
+        </div>
+        <div class="trust-badges">
+            <span class="trust-badge">Money-Back Guarantee</span>
+            <span class="trust-badge">Fully Licensed</span>
+            <span class="trust-badge">ATOL Protected</span>
+            <span class="trust-badge">ABTA Member</span>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>© 2025 TravelRebel. All rights reserved.</p>
+        <p class="mt-2">Contact us: <a href="mailto:support@travelrebel.com">support@travelrebel.com</a> | +44 123 456 7890</p>
+    </footer>
+
+    <script>
+        // Dark Mode Toggle
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark');
+            const toggle = document.querySelector('.dark-mode-toggle');
+            toggle.textContent = document.body.classList.contains('dark') ? '☀️' : '🌙';
+            toggle.setAttribute('aria-label', document.body.classList.contains('dark') ? 'Switch to light mode' : 'Switch to dark mode');
+        }
+
+        // Commission Calculator
+        function calculateEarnings() {
+            const travelAmount = document.getElementById('travelAmount').value;
+            const supplierCommissionRate = 0.12;
+            const advisorCommissionRate = 0.7;
+
+            const supplierCommission = travelAmount * supplierCommissionRate;
+            const advisorEarnings = supplierCommission * advisorCommissionRate;
+
+            document.getElementById('travelValue').textContent = `£${travelAmount}`;
+            document.getElementById('supplierCommission').textContent = `£${Math.round(supplierCommission)}`;
+            document.getElementById('advisorEarnings').textContent = `£${Math.round(advisorEarnings)}`;
+        }
+
+        // Scroll Animation
+        function handleScroll() {
+            const sections = document.querySelectorAll('.section');
+            const triggerPoint = window.innerHeight * 0.8;
+            sections.forEach(section => {
+                const sectionTop = section.getBoundingClientRect().top;
+                if (sectionTop < triggerPoint) {
+                    section.classList.add('visible');
+                }
+            });
+        }
+
+        // Header Shrink on Scroll
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('.header');
+            if (window.scrollY > 50) {
+                header.classList.add('shrink');
+            } else {
+                header.classList.remove('shrink');
+            }
+        });
+
+        window.addEventListener('scroll', handleScroll);
+        window.addEventListener('load', handleScroll);
+    </script>
+</body>
+</html>

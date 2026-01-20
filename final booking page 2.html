@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TravelRebel Booking Summary - Ibiza Getaway</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Poppins:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary-pink: #FF007F;
+            --primary-blue: #00B0FF;
+            --primary-orange: #FF5F00;
+            --neutral-black: #000000;
+            --neutral-white: #FFFFFF;
+            --neutral-silver: #C0C0C0;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, var(--primary-pink), var(--primary-orange), var(--primary-blue));
+            color: var(--neutral-black);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+        body.dark {
+            background: linear-gradient(135deg, #1a202c, #4a5568);
+            color: var(--neutral-white);
+        }
+        body.mobile-view {
+            font-size: 14px;
+        }
+        body.mobile-view .ticket-container {
+            padding: 0.5rem;
+            height: calc(100vh - 150px);
+        }
+        body.mobile-view .section-title {
+            font-size: 1.2rem;
+        }
+        body.mobile-view .hero {
+            height: 200px;
+        }
+        body.mobile-view .hero-overlay h1 {
+            font-size: 1.2rem;
+        }
+        body.mobile-view .cta-button {
+            font-size: 12px;
+            padding: 8px 16px;
+        }
+        body.mobile-view .photo-gallery img {
+            height: 120px;
+        }
+        .header {
+            background: linear-gradient(to right, var(--primary-blue), var(--primary-orange));
+            color: var(--neutral-white);
+            padding: 1rem;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .hero {
+            background: url('https://images.unsplash.com/photo-1501785888041-af3ef285b470?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80') no-repeat center center/cover;
+            height: 250px;
+            position: relative;
+            margin: 1rem 0;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+        .hero-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.4), transparent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .hero-overlay h1 {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 900;
+            font-size: 1.5rem;
+            color: var(--neutral-white);
+            letter-spacing: 2px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        .ticket-container {
+            background: var(--neutral-white);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 1.5rem;
+            position: relative;
+            overflow-y: auto;
+            height: calc(100vh - 200px);
+        }
+        body.dark .ticket-container {
+            background: #2d3748;
+        }
+        .section-title {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 900;
+            font-size: 1.5rem;
+            color: var(--primary-blue);
+            margin-bottom: 1rem;
+            border-bottom: 2px solid var(--neutral-silver);
+            padding-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        body.dark .section-title {
+            color: var(--primary-orange);
+            border-bottom: 2px solid #4b5563;
+        }
+        .perforated-line {
+            border-top: 3px dashed var(--primary-pink);
+            margin: 1.5rem 0;
+        }
+        .profile-card img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+        }
+        .profile-card {
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        .profile-card:hover {
+            transform: scale(1.05);
+        }
+        .cta-button {
+            padding: 10px 20px;
+            background: linear-gradient(90deg, var(--primary-pink), var(--primary-blue));
+            border-radius: 25px;
+            color: var(--neutral-white);
+            border: none;
+            cursor: pointer;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            font-size: 14px;
+            transition: transform 0.3s, background-color 0.3s ease;
+        }
+        .cta-button:hover {
+            background: linear-gradient(90deg, var(--primary-orange), var(--primary-pink));
+            transform: scale(1.05);
+        }
+        .points-bar {
+            width: 100%;
+            height: 20px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+        .points-fill {
+            height: 100%;
+            background: var(--primary-blue);
+            transition: width 0.5s ease;
+        }
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .checklist-item::before {
+            content: '✔';
+            color: green;
+        }
+        .support-bubble {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--primary-blue);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
+        .support-bubble:hover {
+            background: var(--primary-orange);
+        }
+        .social-icons a {
+            margin: 0 0.5rem;
+            color: var(--primary-blue);
+            font-size: 1.5rem;
+            transition: color 0.3s ease;
+        }
+        .social-icons a:hover {
+            color: var(--primary-orange);
+        }
+        body.dark .social-icons a {
+            color: var(--primary-orange);
+        }
+        body.dark .social-icons a:hover {
+            color: var(--primary-pink);
+        }
+        .view-toggle {
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 0.5rem;
+            border-radius: 5px;
+            background: var(--primary-blue);
+            transition: background 0.3s ease;
+        }
+        .view-toggle:hover {
+            background: var(--primary-orange);
+        }
+        @media (min-width: 600px) {
+            .profile-card { max-width: 45%; }
+            .hero { height: 300px; }
+            .hero-overlay h1 { font-size: 2rem; }
+            .section-title { font-size: 2rem; }
+            .cta-button { font-size: 16px; }
+        }
+        @media (min-width: 1024px) {
+            .profile-card { max-width: 30%; }
+            .ticket-container { max-width: 800px; }
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: var(--neutral-white);
+            padding: 1.5rem;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 400px;
+            position: relative;
+        }
+        .close-modal {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        .currency-converter {
+            background: #f1f5f9;
+            padding: 1rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        body.dark .currency-converter {
+            background: #4b5563;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Header -->
+    <header class="header">
+        <div class="flex items-center gap-4">
+            <h1 class="text-2xl font-bold">TravelRebel</h1>
+        </div>
+        <div class="flex items-center gap-3">
+            <span class="view-toggle text-sm" onclick="toggleViewMode()">Mobile View</span>
+            <span class="dark-mode-toggle text-xl cursor-pointer" onclick="toggleDarkMode()">🌙</span>
+            <div class="account-icon text-xl">M</div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <div class="hero">
+        <div class="hero-overlay">
+            <h1>Ibiza Getaway</h1>
+        </div>
+    </div>
+
+    <!-- Ticket Container -->
+    <div class="ticket-container" id="ticketContainer">
+        <!-- Live Weather Widget -->
+        <div id="weatherWidget" class="mb-4 text-center">
+            <h2 class="section-title"><i class="fas fa-sun text-yellow-500"></i> Weather Forecast</h2>
+        </div>
+
+        <!-- Countdown Timer -->
+        <div id="countdownTimer" class="mb-4 text-center text-lg font-semibold"></div>
+
+        <!-- Photo Gallery -->
+        <div class="mb-4">
+            <h2 class="section-title">Photo Gallery</h2>
+            <div id="photoGallery" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 photo-gallery"></div>
+        </div>
+
+        <!-- Virtual Tour -->
+        <div class="mb-4">
+            <h2 class="section-title">Virtual Tour</h2>
+            <iframe id="virtualTour" width="100%" height="200" frameborder="0" allowfullscreen></iframe>
+        </div>
+
+        <!-- Map -->
+        <div class="mb-4">
+            <h2 class="section-title">Map</h2>
+            <img src="https://floatyourboatibiza.com/wp-content/uploads/2022/12/map-of-ibiza.jpg" id="map" alt="Ibiza Map" style="width: 100%; height: 250px; object-fit: cover;">
+        </div>
+
+        <!-- Guest Details -->
+        <div class="mb-4">
+            <h2 class="section-title">Guest Details</h2>
+            <div id="guestDetails">
+                <div class="mb-2">
+                    <p><strong>Lead Guest:</strong> <span id="leadGuestName">Mary Scott</span>, <span id="leadGuestAge">32 years</span></p>
+                    <p><strong>Passport:</strong> <span id="leadGuestPassport">AB1234567</span></p>
+                    <p><strong>Nationality:</strong> <span id="leadGuestNationality">British</span></p>
+                    <p><strong>Dietary Preferences:</strong> <span id="leadGuestDietary">Vegetarian</span></p>
+                    <p><strong>Contact:</strong> <span id="leadGuestEmail">mary.scott@example.com</span>, <span id="leadGuestPhone">+44 7912 345 678</span></p>
+                </div>
+                <div class="mb-2">
+                    <p><strong>Guest 2:</strong> <span id="guest2Name">John Doe</span>, <span id="guest2Age">30 years</span></p>
+                    <p><strong>Passport:</strong> <span id="guest2Passport">CD9876543</span></p>
+                    <p><strong>Nationality:</strong> <span id="guest2Nationality">British</span></p>
+                    <p><strong>Dietary Preferences:</strong> <span id="guest2Dietary">None</span></p>
+                    <p><strong>Contact:</strong> <span id="guest2Email">john.doe@example.com</span>, <span id="guest2Phone">+44 7912 345 679</span></p>
+                </div>
+                <div class="mb-2">
+                    <p><strong>Guest 3:</strong> <span id="guest3Name">Jane Smith</span>, <span id="guest3Age">28 years</span></p>
+                    <p><strong>Passport:</strong> <span id="guest3Passport">EF4567891</span></p>
+                    <p><strong>Nationality:</strong> <span id="guest3Nationality">British</span></p>
+                    <p><strong>Dietary Preferences:</strong> <span id="guest3Dietary">Gluten-Free</span></p>
+                    <p><strong>Contact:</strong> <span id="guest3Email">jane.smith@example.com</span>, <span id="guest3Phone">+44 7912 345 680</span></p>
+                </div>
+            </div>
+            <button onclick="openModal('editModal')" class="cta-button mt-2">Edit Details</button>
+        </div>
+
+        <div class="perforated-line"></div>
+
+        <!-- Trip Details -->
+        <div class="mb-4">
+            <h2 class="section-title"><i class="fas fa-plane text-blue-500"></i> Your Trip</h2>
+            <p><strong>Destination:</strong> Ibiza, Spain</p>
+            <p><strong>Departure Airport:</strong> London Gatwick (LGW)</p>
+            <p><strong>Travel Dates:</strong> June 10 - June 17, 2025</p>
+            <p><strong>Duration:</strong> 7 Nights</p>
+            <p><strong>Provider:</strong> <img src="https://cdn.freebiesupply.com/logos/thumbs/2x/tui-logo.png" alt="TUI Logo" class="h-6 inline"> TUI</p>
+        </div>
+
+        <div class="perforated-line"></div>
+
+        <!-- Flight Details -->
+        <div class="mb-4">
+            <h2 class="section-title">Flight Details</h2>
+            <div>
+                <p><strong>Outbound:</strong> June 10, 2025 - LGW to IBZ, 07:00 - 10:30 <img src="https://globalgoodawards.co.uk/wp-content/uploads/2020/01/british-airways-logo.png" alt="British Airways Logo" class="h-6 inline"></p>
+                <p><strong>Flight Number:</strong> BA1234</p>
+                <p><strong>Gate:</strong> 12</p>
+                <p><strong>Seats:</strong> 15A, 15B, 15C</p>
+                <p><strong>Flight Time:</strong> 3h 30m</p>
+                <p><strong>Extra Legroom:</strong> Yes</p>
+            </div>
+            <div class="mt-2">
+                <p><strong>Return:</strong> June 17, 2025 - IBZ to LGW, 18:00 - 21:30 <img src="https://globalgoodawards.co.uk/wp-content/uploads/2020/01/british-airways-logo.png" alt="British Airways Logo" class="h-6 inline"></p>
+                <p><strong>Flight Number:</strong> BA5678</p>
+                <p><strong>Gate:</strong> 8</p>
+                <p><strong>Seats:</strong> 20D, 20E, 20F</p>
+                <p><strong>Flight Time:</strong> 3h 30m</p>
+                <p><strong>Extra Legroom:</strong> No</p>
+            </div>
+        </div>
+
+        <div class="perforated-line"></div>
+
+        <!-- Package Details -->
+        <div class="mb-4">
+            <h2 class="section-title">Your Package</h2>
+            <p><strong>Hotel:</strong> Ibiza Rocks Hotel</p>
+            <p><strong>Star Rating:</strong> ★★★★☆</p>
+            <p><strong>TripAdvisor Rating:</strong> <img src="https://cdn.worldvectorlogo.com/logos/tripadvisor-3.svg" alt="TripAdvisor 4.5 Rating" class="h-6 inline"> 4.5/5 (Based on 1,234 reviews)</p>
+            <p><strong>Room Type:</strong> Deluxe Double (Pool View)</p>
+            <p><strong>Board Basis:</strong> Bed & Breakfast</p>
+            <p><strong>Class:</strong> Economy</p>
+            <p><strong>Baggage:</strong> 23kg per person</p>
+        </div>
+
+        <div class="perforated-line"></div>
+
+        <!-- Transfer Details -->
+        <div class="mb-4">
+            <h2 class="section-title"><i class="fas fa-bus text-green-500"></i> Transfer Details</h2>
+            <p><strong>Outbound Transfer:</strong> June 10, 2025 - IBZ Airport to Ibiza Rocks Hotel</p>
+            <p><strong>Transport:</strong> Private Shuttle, 11:00 - 11:30</p>
+            <p><strong>Return Transfer:</strong> June 17, 2025 - Ibiza Rocks Hotel to IBZ Airport</p>
+            <p><strong>Transport:</strong> Private Shuttle, 15:00 - 15:30</p>
+            <p><strong>Provider:</strong> TUI Transfers</p>
+        </div>
+
+        <div class="perforated-line"></div>
+
+        <!-- Holiday Itinerary -->
+        <div class="mb-4">
+            <h2 class="section-title">Holiday Itinerary</h2>
+            <p><strong>Day 1 (June 10):</strong> Arrival, check-in, welcome dinner</p>
+            <p><strong>Day 2 (June 11):</strong> Beach day at Cala Comte</p>
+            <p><strong>Day 3 (June 12):</strong> Ibiza Old Town tour</p>
+            <p><strong>Day 4 (June 13):</strong> Boat trip to Formentera</p>
+            <p><strong>Day 5 (June 14):</strong> Free day for relaxation</p>
+            <p><strong>Day 6 (June 15):</strong> Sunset at Café del Mar</p>
+            <p><strong>Day 7 (June 16):</strong> Local market visit</p>
+            <p><strong>Day 8 (June 17):</strong> Check-out, departure</p>
+        </div>
+
+        <div class="perforated-line"></div>
+
+        <!-- Checklist -->
+        <div class="mb-4">
+            <h2 class="section-title">Your Travel Checklist</h2>
+            <div id="checklist" class="space-y-2"></div>
+        </div>
+
+        <div class="perforated-line"></div>
+
+        <!-- Price Breakdown -->
+        <div class="mb-4">
+            <h2 class="section-title">Price Breakdown</h2>
+            <table class="w-full border-collapse">
+                <thead>
+                    <tr>
+                        <th class="border p-2">Description</th>
+                        <th class="border p-2 text-right">Amount (£)</th>
+                    </tr>
+                </thead>
+                <tbody id="priceBreakdown"></tbody>
+            </table>
+        </div>
+
+        <div class="perforated-line"></div>
+
+        <!-- High Street Price Comparison -->
+        <div class="mb-4">
+            <h2 class="section-title">High Street Price Comparison</h2>
+            <div class="space-y-2">
+                <div class="flex justify-between bg-green-100 p-2 rounded">
+                    <span>TravelRebel</span>
+                    <span>£2,400 <a href="#" class="text-blue-600">View Deal</a></span>
+                </div>
+                <div class="flex justify-between bg-red-100 p-2 rounded">
+                    <span>Expedia</span>
+                    <span>£2,700 <a href="https://www.expedia.com" target="_blank" class="text-blue-600">View Deal</a></span>
+                </div>
+                <div class="flex justify-between bg-blue-100 p-2 rounded">
+                    <span>Booking.com</span>
+                    <span>£2,650 <a href="https://www.booking.com" target="_blank" class="text-blue-600">View Deal</a></span>
+                </div>
+                <div class="mt-2">
+                    <div class="flex justify-between">
+                        <span>Return Flights</span>
+                        <span class="text-green-600">✔</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>7 Nights Accommodation</span>
+                        <span class="text-green-600">✔</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Daily Breakfast</span>
+                        <span class="text-green-600">✔</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Airport Transfers</span>
+                        <span class="text-green-600">✔</span>
+                    </div>
+                </div>
+            </div>
+            <p class="text-sm text-gray-600">Compared on: 07:03 PM BST, May 16, 2025</p>
+        </div>
+
+        <div class="perforated-line"></div>
+
+        <!-- Loyalty Points -->
+        <div class="mb-4">
+            <h2 class="section-title">Your Rebel Points</h2>
+            <p>Current Tier: <span id="loyaltyTier">Explorer</span></p>
+            <p>Current Points: <span id="currentPoints">500</span></p>
+            <p>Points from this Booking: <span class="text-green-600" id="pointsFromBooking">+240 Points</span></p>
+            <div class="points-bar">
+                <div id="pointsFill" class="points-fill"></div>
+            </div>
+            <p>Total Points After Booking: <span id="totalPoints">740</span> / 1000 (Next Tier: Jetsetter at 1000 Points)</p>
+            <button onclick="openModal('redemptionModal')" class="cta-button mt-2">Redeem Points</button>
+        </div>
+
+        <div class="perforated-line"></div>
+
+        <!-- Social Media Share -->
+        <div class="mb-4 text-center">
+            <h2 class="section-title">Share Your Trip</h2>
+            <div class="social-icons">
+                <a href="https://twitter.com/intent/tweet?text=Check%20out%20my%20Ibiza%20Getaway%20with%20TravelRebel!%20✈️🌴" target="_blank"><i class="fab fa-twitter"></i></a>
+                <a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Ftravelrebel.com%2Fibiza-getaway" target="_blank"><i class="fab fa-facebook"></i></a>
+                <a href="https://www.instagram.com/" target="_blank"><i class="fab fa-instagram"></i></a>
+            </div>
+        </div>
+
+        <div class="perforated-line"></div>
+
+        <!-- Action Buttons -->
+        <div class="text-center mt-4 mb-4">
+            <button onclick="confirmBooking()" class="cta-button mr-2" id="confirmBtn">Confirm Booking</button>
+            <button onclick="downloadPDF()" class="cta-button">Download PDF</button>
+        </div>
+
+        <!-- Currency Converter -->
+        <div class="mb-4 currency-converter">
+            <h2 class="section-title">Currency Converter</h2>
+            <div class="flex flex-col sm:flex-row gap-2 items-center">
+                <input type="number" id="amountInput" value="2400" class="p-2 border rounded w-full sm:w-1/3">
+                <select id="currencySelect" class="p-2 border rounded w-full sm:w-1/3">
+                    <option value="GBP">GBP (£)</option>
+                    <option value="EUR">EUR (€)</option>
+                    <option value="USD">USD ($)</option>
+                </select>
+                <div id="convertedAmount" class="p-2 w-full sm:w-1/3 text-center bg-gray-200 rounded">€2,880.00</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customer Support Bubble -->
+    <div class="support-bubble" onclick="openSupportChat()">
+        <i class="fas fa-comment-alt text-xl"></i>
+    </div>
+
+    <!-- Modals -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('editModal')">×</span>
+            <h3 class="text-xl font-semibold">Edit Traveller Information</h3>
+            <h4 class="font-semibold mt-2">Lead Guest</h4>
+            <label for="editLeadGuestName" class="block mb-1">Name:</label>
+            <input type="text" id="editLeadGuestName" class="w-full p-2 border rounded mb-2" value="Mary Scott">
+            <label for="editLeadGuestAge" class="block mb-1">Age:</label>
+            <input type="number" id="editLeadGuestAge" class="w-full p-2 border rounded mb-2" value="32">
+            <label for="editLeadGuestPassport" class="block mb-1">Passport:</label>
+            <input type="text" id="editLeadGuestPassport" class="w-full p-2 border rounded mb-2" value="AB1234567">
+            <label for="editLeadGuestNationality" class="block mb-1">Nationality:</label>
+            <input type="text" id="editLeadGuestNationality" class="w-full p-2 border rounded mb-2" value="British">
+            <label for="editLeadGuestDietary" class="block mb-1">Dietary Preferences:</label>
+            <input type="text" id="editLeadGuestDietary" class="w-full p-2 border rounded mb-2" value="Vegetarian">
+            <label for="editLeadGuestEmail" class="block mb-1">Email:</label>
+            <input type="email" id="editLeadGuestEmail" class="w-full p-2 border rounded mb-2" value="mary.scott@example.com">
+            <label for="editLeadGuestPhone" class="block mb-1">Phone:</label>
+            <input type="tel" id="editLeadGuestPhone" class="w-full p-2 border rounded mb-2" value="+44 7912 345 678">
+            
+            <h4 class="font-semibold mt-2">Guest 2</h4>
+            <label for="editGuest2Name" class="block mb-1">Name:</label>
+            <input type="text" id="editGuest2Name" class="w-full p-2 border rounded mb-2" value="John Doe">
+            <label for="editGuest2Age" class="block mb-1">Age:</label>
+            <input type="number" id="editGuest2Age" class="w-full p-2 border rounded mb-2" value="30">
+            <label for="editGuest2Passport" class="block mb-1">Passport:</label>
+            <input type="text" id="editGuest2Passport" class="w-full p-2 border rounded mb-2" value="CD9876543">
+            <label for="editGuest2Nationality" class="block mb-1">Nationality:</label>
+            <input type="text" id="editGuest2Nationality" class="w-full p-2 border rounded mb-2" value="British">
+            <label for="editGuest2Dietary" class="block mb-1">Dietary Preferences:</label>
+            <input type="text" id="editGuest2Dietary" class="w-full p-2 border rounded mb-2" value="None">
+            <label for="editGuest2Email" class="block mb-1">Email:</label>
+            <input type="email" id="editGuest2Email" class="w-full p-2 border rounded mb-2" value="john.doe@example.com">
+            <label for="editGuest2Phone" class="block mb-1">Phone:</label>
+            <input type="tel" id="editGuest2Phone" class="w-full p-2 border rounded mb-2" value="+44 7912 345 679">
+            
+            <h4 class="font-semibold mt-2">Guest 3</h4>
+            <label for="editGuest3Name" class="block mb-1">Name:</label>
+            <input type="text" id="editGuest3Name" class="w-full p-2 border rounded mb-2" value="Jane Smith">
+            <label for="editGuest3Age" class="block mb-1">Age:</label>
+            <input type="number" id="editGuest3Age" class="w-full p-2 border rounded mb-2" value="28">
+            <label for="editGuest3Passport" class="block mb-1">Passport:</label>
+            <input type="text" id="editGuest3Passport" class="w-full p-2 border rounded mb-2" value="EF4567891">
+            <label for="editGuest3Nationality" class="block mb-1">Nationality:</label>
+            <input type="text" id="editGuest3Nationality" class="w-full p-2 border rounded mb-2" value="British">
+            <label for="editGuest3Dietary" class="block mb-1">Dietary Preferences:</label>
+            <input type="text" id="editGuest3Dietary" class="w-full p-2 border rounded mb-2" value="Gluten-Free">
+            <label for="editGuest3Email" class="block mb-1">Email:</label>
+            <input type="email" id="editGuest3Email" class="w-full p-2 border rounded mb-2" value="jane.smith@example.com">
+            <label for="editGuest3Phone" class="block mb-1">Phone:</label>
+            <input type="tel" id="editGuest3Phone" class="w-full p-2 border rounded mb-2" value="+44 7912 345 680">
+            
+            <button onclick="saveEdit()" class="cta-button mt-2">Save</button>
+        </div>
+    </div>
+
+    <div id="redemptionModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('redemptionModal')">×</span>
+            <h3 class="text-xl font-semibold">Redeem Points</h3>
+            <p>Current Points: <span id="modalCurrentPoints">500</span></p>
+            <select id="redemptionOption" class="w-full p-2 border rounded mb-2">
+                <option value="25">£25 Voucher (500 Points)</option>
+                <option value="50">£50 Voucher (1000 Points)</option>
+            </select>
+            <button onclick="redeemPoints()" class="cta-button">Redeem</button>
+        </div>
+    </div>
+
+    <div id="supportModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('supportModal')">×</span>
+            <h3 class="text-xl font-semibold">Customer Support</h3>
+            <p>Contact us at <a href="mailto:support@travelrebel.com" class="text-blue-600">support@travelrebel.com</a> or call +44 123 456 7890.</p>
+            <p>Live chat coming soon!</p>
+        </div>
+    </div>
+
+    <script>
+        const mockApiResponse = {
+            weather: { temp: 22, description: "Sunny" },
+            departureDate: "June 10, 2025",
+            photos: [
+                "https://images.unsplash.com/photo-1501785888041-af3ef285b470",
+                "https://images.unsplash.com/photo-1472214103451-9374bd1c798e",
+                "https://images.unsplash.com/photo-1507525428034-b723cf961d3e"
+            ],
+            virtualTourUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+            checklist: ["Passport details added", "Flights booked", "Accommodation confirmed", "Travel insurance selected"],
+            priceBreakdown: {
+                basePricePerPerson: 666.67,
+                totalBasePrice: 2000.00,
+                markup: 400.00,
+                agentCommission: 240.00,
+                travelRebelCommission: 120.00,
+                remainingMarkup: 40.00,
+                totalPrice: 2400.00
+            },
+            loyalty: {
+                currentPoints: 500,
+                pointsFromBooking: 240,
+                totalPoints: 740,
+                maxPoints: 1000,
+                currentTier: "Explorer",
+                nextTier: "Jetsetter"
+            },
+            exchangeRates: {
+                GBP: 1.0,
+                EUR: 1.2,
+                USD: 1.4
+            }
+        };
+
+        function init() {
+            document.getElementById('weatherWidget').innerHTML = `<h2 class="section-title"><i class="fas fa-sun text-yellow-500"></i> Weather Forecast</h2>Weather in Ibiza: ${mockApiResponse.weather.temp}°C, ${mockApiResponse.weather.description}`;
+            initCountdownTimer(mockApiResponse.departureDate);
+            initPhotoGallery(mockApiResponse.photos);
+            initVirtualTour(mockApiResponse.virtualTourUrl);
+            initChecklist(mockApiResponse.checklist);
+            initPriceBreakdown(mockApiResponse.priceBreakdown);
+            initLoyaltyPoints(mockApiResponse.loyalty);
+            initCurrencyConverter();
+        }
+
+        function initCountdownTimer(departureDate) {
+            const countDownDate = new Date(departureDate).getTime();
+            setInterval(() => {
+                const now = new Date().getTime();
+                const distance = countDownDate - now;
+                const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                document.getElementById('countdownTimer').textContent = `Departure in ${days} days`;
+            }, 1000);
+        }
+
+        function initPhotoGallery(photos) {
+            const gallery = document.getElementById('photoGallery');
+            gallery.innerHTML = photos.map(photo => `<div class="relative"><img src="${photo}" alt="Hotel Photo" class="w-full h-40 object-cover rounded"></div>`).join('');
+        }
+
+        function initVirtualTour(url) {
+            document.getElementById('virtualTour').src = url;
+        }
+
+        function initChecklist(items) {
+            const checklist = document.getElementById('checklist');
+            checklist.innerHTML = items.map(item => `<div class="checklist-item">${item}</div>`).join('');
+        }
+
+        function initPriceBreakdown(data) {
+            const tbody = document.getElementById('priceBreakdown');
+            tbody.innerHTML = `
+                <tr><td class="border p-2">Base Price (per person)</td><td class="border p-2 text-right">${data.basePricePerPerson.toFixed(2)}</td></tr>
+                <tr><td class="border p-2">Total Base Price</td><td class="border p-2 text-right">${data.totalBasePrice.toFixed(2)}</td></tr>
+                <tr><td class="border p-2">Markup</td><td class="border p-2 text-right">${data.markup.toFixed(2)}</td></tr>
+                <tr><td class="border p-2">Agent Commission</td><td class="border p-2 text-right">${data.agentCommission.toFixed(2)}</td></tr>
+                <tr><td class="border p-2">TravelRebel Commission</td><td class="border p-2 text-right">${data.travelRebelCommission.toFixed(2)}</td></tr>
+                <tr><td class="border p-2">Remaining Markup</td><td class="border p-2 text-right">${data.remainingMarkup.toFixed(2)}</td></tr>
+                <tr><td class="border p-2 font-medium">Total Price</td><td class="border p-2 text-right font-medium">${data.totalPrice.toFixed(2)}</td></tr>
+            `;
+        }
+
+        function initLoyaltyPoints(data) {
+            document.getElementById('loyaltyTier').textContent = data.currentTier;
+            document.getElementById('currentPoints').textContent = data.currentPoints;
+            document.getElementById('pointsFromBooking').textContent = `+${data.pointsFromBooking} Points`;
+            document.getElementById('totalPoints').textContent = data.totalPoints;
+            document.getElementById('modalCurrentPoints').textContent = data.currentPoints;
+            const pointsFill = document.getElementById('pointsFill');
+            const width = (data.totalPoints / data.maxPoints) * 100;
+            pointsFill.style.width = `${width}%`;
+        }
+
+        function initCurrencyConverter() {
+            const amountInput = document.getElementById('amountInput');
+            const currencySelect = document.getElementById('currencySelect');
+            const convertedAmount = document.getElementById('convertedAmount');
+
+            function updateConversion() {
+                const amount = parseFloat(amountInput.value) || 0;
+                const currency = currencySelect.value;
+                const rate = mockApiResponse.exchangeRates[currency];
+                const converted = (amount * rate).toFixed(2);
+                const symbol = currency === 'GBP' ? '£' : currency === 'EUR' ? '€' : '$';
+                convertedAmount.textContent = `${symbol}${converted}`;
+            }
+
+            amountInput.addEventListener('input', updateConversion);
+            currencySelect.addEventListener('change', updateConversion);
+            updateConversion();
+        }
+
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark');
+            document.querySelector('.dark-mode-toggle').textContent = document.body.classList.contains('dark') ? '☀️' : '🌙';
+        }
+
+        function toggleViewMode() {
+            document.body.classList.toggle('mobile-view');
+            const toggleButton = document.querySelector('.view-toggle');
+            toggleButton.textContent = document.body.classList.contains('mobile-view') ? 'Desktop View' : 'Mobile View';
+        }
+
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'flex';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        function openSupportChat() {
+            openModal('supportModal');
+        }
+
+        function confirmBooking() {
+            alert('Booking Confirmed!');
+        }
+
+        function downloadPDF() {
+            const element = document.getElementById('ticketContainer');
+            html2pdf().from(element).save('TravelRebel_Booking_Summary.pdf');
+        }
+
+        function saveEdit() {
+            const leadGuestName = document.getElementById('editLeadGuestName').value;
+            const leadGuestAge = document.getElementById('editLeadGuestAge').value;
+            const leadGuestPassport = document.getElementById('editLeadGuestPassport').value;
+            const leadGuestNationality = document.getElementById('editLeadGuestNationality').value;
+            const leadGuestDietary = document.getElementById('editLeadGuestDietary').value;
+            const leadGuestEmail = document.getElementById('editLeadGuestEmail').value;
+            const leadGuestPhone = document.getElementById('editLeadGuestPhone').value;
+
+            const guest2Name = document.getElementById('editGuest2Name').value;
+            const guest2Age = document.getElementById('editGuest2Age').value;
+            const guest2Passport = document.getElementById('editGuest2Passport').value;
+            const guest2Nationality = document.getElementById('editGuest2Nationality').value;
+            const guest2Dietary = document.getElementById('editGuest2Dietary').value;
+            const guest2Email = document.getElementById('editGuest2Email').value;
+            const guest2Phone = document.getElementById('editGuest2Phone').value;
+
+            const guest3Name = document.getElementById('editGuest3Name').value;
+            const guest3Age = document.getElementById('editGuest3Age').value;
+            const guest3Passport = document.getElementById('editGuest3Passport').value;
+            const guest3Nationality = document.getElementById('editGuest3Nationality').value;
+            const guest3Dietary = document.getElementById('editGuest3Dietary').value;
+            const guest3Email = document.getElementById('editGuest3Email').value;
+            const guest3Phone = document.getElementById('editGuest3Phone').value;
+
+            if (leadGuestName && leadGuestEmail && leadGuestPhone && guest2Name && guest2Email && guest2Phone && guest3Name && guest3Email && guest3Phone) {
+                document.getElementById('leadGuestName').textContent = leadGuestName;
+                document.getElementById('leadGuestAge').textContent = `${leadGuestAge} years`;
+                document.getElementById('leadGuestPassport').textContent = leadGuestPassport;
+                document.getElementById('leadGuestNationality').textContent = leadGuestNationality;
+                document.getElementById('leadGuestDietary').textContent = leadGuestDietary;
+                document.getElementById('leadGuestEmail').textContent = leadGuestEmail;
+                document.getElementById('leadGuestPhone').textContent = leadGuestPhone;
+
+                document.getElementById('guest2Name').textContent = guest2Name;
+                document.getElementById('guest2Age').textContent = `${guest2Age} years`;
+                document.getElementById('guest2Passport').textContent = guest2Passport;
+                document.getElementById('guest2Nationality').textContent = guest2Nationality;
+                document.getElementById('guest2Dietary').textContent = guest2Dietary;
+                document.getElementById('guest2Email').textContent = guest2Email;
+                document.getElementById('guest2Phone').textContent = guest2Phone;
+
+                document.getElementById('guest3Name').textContent = guest3Name;
+                document.getElementById('guest3Age').textContent = `${guest3Age} years`;
+                document.getElementById('guest3Passport').textContent = guest3Passport;
+                document.getElementById('guest3Nationality').textContent = guest3Nationality;
+                document.getElementById('guest3Dietary').textContent = guest3Dietary;
+                document.getElementById('guest3Email').textContent = guest3Email;
+                document.getElementById('guest3Phone').textContent = guest3Phone;
+
+                alert('Guest details saved!');
+                closeModal('editModal');
+            } else {
+                alert('Please fill all required fields.');
+            }
+        }
+
+        function redeemPoints() {
+            const points = parseInt(document.getElementById('redemptionOption').value) * 20;
+            const currentPoints = parseInt(document.getElementById('currentPoints').textContent);
+            if (currentPoints >= points) {
+                alert(`Redeemed ${points} points for a £${document.getElementById('redemptionOption').value} voucher!`);
+                const newPoints = currentPoints - points;
+                document.getElementById('currentPoints').textContent = newPoints;
+                document.getElementById('modalCurrentPoints').textContent = newPoints;
+                const totalPoints = newPoints + mockApiResponse.loyalty.pointsFromBooking;
+                document.getElementById('totalPoints').textContent = totalPoints;
+                const pointsFill = document.getElementById('pointsFill');
+                const width = (totalPoints / mockApiResponse.loyalty.maxPoints) * 100;
+                pointsFill.style.width = `${width}%`;
+                closeModal('redemptionModal');
+            } else {
+                alert('Not enough points!');
+            }
+        }
+
+        // Initialize
+        window.onload = init;
+    </script>
+</body>
+</html>

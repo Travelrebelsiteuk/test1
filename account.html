@@ -1,0 +1,457 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="TravelRebel Account - Manage your personal details, social links, and account settings.">
+    <title>TravelRebel - Account</title>
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/869/869149.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary-pink: #FF007F;
+            --primary-blue: #00B0FF;
+            --primary-orange: #FF5F00;
+            --neutral-black: #1A1A1A;
+            --neutral-white: #FFFFFF;
+            --neutral-silver: #C0C0C0;
+            --neutral-gray: #F7FAFC;
+            --gold: #FFD700;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, var(--primary-pink), var(--primary-orange), var(--primary-blue));
+            color: var(--neutral-black);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+            transition: background 0.5s ease, color 0.5s ease;
+        }
+        body.dark {
+            background: linear-gradient(135deg, #1a202c, #4a5568);
+            color: var(--neutral-white);
+        }
+        .header {
+            background: linear-gradient(to right, var(--primary-blue), var(--primary-orange));
+            color: var(--neutral-white);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 30;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 900;
+            font-size: 1.8rem;
+            letter-spacing: 1px;
+        }
+        .hero {
+            background: url('https://images.unsplash.com/photo-1519125323398-675f1f1d1f1f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80') no-repeat center center/cover;
+            height: 300px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: var(--neutral-white);
+            padding: 2rem;
+        }
+        .hero-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.3));
+        }
+        .hero-content h1 {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 900;
+            font-size: 2.5rem;
+            letter-spacing: 2px;
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.6);
+            animation: fadeInUp 1s ease-out;
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .dashboard-section {
+            padding: 2rem;
+            background: var(--neutral-white);
+            margin: 1.5rem auto;
+            max-width: 1400px;
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+            position: relative;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+        .dashboard-section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        body.dark .dashboard-section {
+            background: #2d3748;
+        }
+        .section-title {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 900;
+            font-size: 2rem;
+            color: var(--primary-blue);
+            margin-bottom: 1.5rem;
+            border-bottom: 3px solid var(--neutral-silver);
+            padding-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        body.dark .section-title {
+            color: var(--primary-orange);
+            border-bottom: 3px solid #4b5563;
+        }
+        .info-card {
+            background: var(--neutral-gray);
+            padding: 1.5rem;
+            border-radius: 15px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        body.dark .info-card {
+            background: #4b5563;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+        }
+        .info-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15), 0 0 15px var(--gold);
+        }
+        .info-card p {
+            margin: 0.5rem 0;
+            font-size: 0.95rem;
+        }
+        .social-links a {
+            color: var(--primary-blue);
+            font-size: 1.5rem;
+            margin: 0 0.5rem;
+            transition: color 0.3s ease, transform 0.3s ease;
+        }
+        body.dark .social-links a {
+            color: var(--primary-orange);
+        }
+        .social-links a:hover {
+            color: var(--primary-pink);
+            transform: scale(1.2);
+        }
+        .contact-links a {
+            color: var(--primary-blue);
+            text-decoration: underline;
+            transition: color 0.3s ease;
+        }
+        body.dark .contact-links a {
+            color: var(--primary-orange);
+        }
+        .contact-links a:hover {
+            color: var(--primary-pink);
+        }
+        .cta-button {
+            padding: 10px 20px;
+            background: linear-gradient(90deg, var(--primary-pink), var(--primary-blue));
+            border-radius: 50px;
+            color: var(--neutral-white);
+            border: none;
+            cursor: pointer;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            font-size: 14px;
+            transition: transform 0.3s ease, background 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .cta-button:hover {
+            background: linear-gradient(90deg, var(--primary-orange), var(--primary-pink));
+            transform: scale(1.05);
+        }
+        .cta-button:hover::after {
+            content: '🎉';
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            font-size: 20px;
+            animation: confetti 1s infinite;
+        }
+        @keyframes confetti {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(50px) rotate(360deg); opacity: 0; }
+        }
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--neutral-silver);
+            transition: 0.4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: var(--neutral-white);
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: var(--primary-blue);
+        }
+        body.dark input:checked + .slider {
+            background-color: var(--primary-orange);
+        }
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        .activity-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            background: var(--neutral-gray);
+            border-radius: 10px;
+            margin-bottom: 0.5rem;
+        }
+        body.dark .activity-item {
+            background: #4b5563;
+        }
+        .footer {
+            background: linear-gradient(to right, var(--primary-blue), var(--primary-orange));
+            color: var(--neutral-white);
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+        }
+        .footer a {
+            color: var(--neutral-white);
+            text-decoration: underline;
+            transition: color 0.3s ease;
+        }
+        .footer a:hover {
+            color: var(--primary-pink);
+        }
+        .dark-mode-toggle {
+            transition: transform 0.3s ease;
+        }
+        .dark-mode-toggle:hover {
+            transform: rotate(20deg);
+        }
+        @media (max-width: 768px) {
+            .hero {
+                height: 250px;
+            }
+            .hero-content h1 {
+                font-size: 1.75rem;
+            }
+            .section-title {
+                font-size: 1.75rem;
+            }
+            .info-card {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Header -->
+    <header class="header">
+        <h1>TravelRebel Account</h1>
+        <div class="flex items-center gap-4">
+            <button class="dark-mode-toggle text-2xl" onclick="toggleDarkMode()" aria-label="Toggle dark mode">🌙</button>
+            <a href="dashboard.html" class="cta-button" aria-label="Back to dashboard">Back to Dashboard</a>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-overlay"></div>
+        <div class="hero-content relative z-10">
+            <h1>Welcome, Alex Smith</h1>
+        </div>
+    </section>
+
+    <!-- Personal Details Section -->
+    <section class="dashboard-section">
+        <h2 class="section-title"><i class="fas fa-user text-blue-500"></i> Personal Details</h2>
+        <div class="info-card">
+            <p><strong>Name:</strong> Alex Smith</p>
+            <p><strong>Email:</strong> alex.smith@email.com</p>
+            <p><strong>Phone Number:</strong> +44 123 456 7890</p>
+            <p><strong>Address:</strong> 123 High Street, London, SW1A 1AA, United Kingdom</p>
+            <div class="mt-4">
+                <button class="cta-button" aria-label="Edit personal details">Edit Details</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Information Section -->
+    <section class="dashboard-section">
+        <h2 class="section-title"><i class="fas fa-envelope text-blue-500"></i> Contact Information</h2>
+        <div class="info-card">
+            <p><strong>Support Email:</strong> <a href="mailto:support@travelrebel.com" class="contact-links">support@travelrebel.com</a></p>
+            <p><strong>Phone:</strong> +44 123 456 7890</p>
+            <p><strong>Business Hours:</strong> Mon-Fri, 9 AM - 6 PM BST</p>
+        </div>
+    </section>
+
+    <!-- Social Links Section -->
+    <section class="dashboard-section">
+        <h2 class="section-title"><i class="fas fa-globe text-blue-500"></i> Social Links</h2>
+        <div class="info-card">
+            <p>Connect with us on social media:</p>
+            <div class="social-links mt-2">
+                <a href="https://instagram.com/travelrebel" target="_blank" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                <a href="https://twitter.com/travelrebel" target="_blank" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                <a href="https://facebook.com/travelrebel" target="_blank" aria-label="Facebook"><i class="fab fa-facebook"></i></a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Account Settings Section -->
+    <section class="dashboard-section">
+        <h2 class="section-title"><i class="fas fa-cog text-blue-500"></i> Account Settings</h2>
+        <div class="info-card">
+            <div class="flex justify-between items-center mb-4">
+                <span>Change Password</span>
+                <button class="cta-button" aria-label="Change password">Change</button>
+            </div>
+            <div class="flex justify-between items-center mb-4">
+                <span>Email Notifications</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" checked aria-label="Toggle email notifications">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="flex justify-between items-center mb-4">
+                <span>Two-Factor Authentication</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" aria-label="Toggle two-factor authentication">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="flex justify-end">
+                <button class="cta-button" aria-label="Logout">Logout</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Recent Activity Section -->
+    <section class="dashboard-section">
+        <h2 class="section-title"><i class="fas fa-history text-blue-500"></i> Recent Activity</h2>
+        <div class="info-card">
+            <div class="activity-item">
+                <span>Booked a holiday to Mallorca</span>
+                <span>May 15, 2025, 14:30 BST</span>
+            </div>
+            <div class="activity-item">
+                <span>Searched for holidays in Santorini</span>
+                <span>May 14, 2025, 09:12 BST</span>
+            </div>
+            <div class="activity-item">
+                <span>Updated personal details</span>
+                <span>May 13, 2025, 16:45 BST</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>© 2025 TravelRebel. All rights reserved.</p>
+        <p class="mt-2">Contact us: <a href="mailto:support@travelrebel.com">support@travelrebel.com</a> | +44 123 456 7890</p>
+    </footer>
+
+    <script>
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark');
+            const toggle = document.querySelector('.dark-mode-toggle');
+            toggle.textContent = document.body.classList.contains('dark') ? '☀️' : '🌙';
+            toggle.setAttribute('aria-label', document.body.classList.contains('dark') ? 'Switch to light mode' : 'Switch to dark mode');
+        }
+
+        function handleScroll() {
+            const sections = document.querySelectorAll('.dashboard-section');
+            const triggerPoint = window.innerHeight * 0.8;
+            sections.forEach(section => {
+                const sectionTop = section.getBoundingClientRect().top;
+                if (sectionTop < triggerPoint) {
+                    section.classList.add('visible');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', handleScroll);
+        window.addEventListener('load', handleScroll);
+    </script>
+</body>
+</html>
